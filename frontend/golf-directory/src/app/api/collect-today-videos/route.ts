@@ -225,7 +225,7 @@ export async function GET(request: NextRequest) {
         views: video.view_count?.toLocaleString() || '0',
         likes: video.like_count?.toLocaleString() || '0',
         published: video.published_at,
-        engagement: video.engagement_rate ? `${video.engagement_rate.toFixed(2)}%` : '0%',
+        engagement: (typeof video.engagement_rate === 'number') ? `${video.engagement_rate.toFixed(2)}%` : '0%',
         duration: video.duration_seconds,
         thumbnail: video.thumbnail_url,
         url: `https://youtube.com/watch?v=${video.id}`,

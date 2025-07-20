@@ -102,7 +102,7 @@ export async function GET(request: Request) {
       view_count: row.view_count,
       like_count: row.like_count,
       comment_count: row.comment_count,
-      engagement_rate: row.engagement_rate ? parseFloat(row.engagement_rate.toFixed(2)) : null,
+      engagement_rate: (typeof row.engagement_rate === 'number') ? parseFloat(row.engagement_rate.toFixed(2)) : null,
       
       // Performance metrics
       view_velocity: Math.round(row.view_velocity),

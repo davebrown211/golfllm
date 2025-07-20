@@ -222,7 +222,7 @@ export async function GET(
         channel: row.channel,
         views: row.view_count.toLocaleString(),
         likes: row.like_count.toLocaleString(),
-        engagement: `${row.engagement_rate.toFixed(2)}%`,
+        engagement: (typeof row.engagement_rate === 'number') ? `${row.engagement_rate.toFixed(2)}%` : 'N/A',
         published: row.published_at.toISOString().split('T')[0],
         url: `https://youtube.com/watch?v=${row.video_id}`,
         thumbnail: row.thumbnail_url || ''
