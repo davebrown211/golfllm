@@ -21,7 +21,7 @@ rm -rf build
 
 # Install dependencies fresh
 echo "📦 Installing dependencies..."
-npm ci
+npm install
 
 # Run clean build
 echo "🔨 Building application..."
