@@ -45,3 +45,13 @@ public/audio/*.mp3
 
 # Stable diffusion (too large)
 stable-diffusion-webui/
+
+# Deployment scripts with credentials
+backend/*deploy*.sh
+backend/setup-database-remote.sh
+backend/create-database.sh
+frontend/golf-directory/setup-droplet.sh
+
+# Any file with secrets
+**/database-credentials.*
+**/secrets.*

@@ -1,7 +1,7 @@
 import { Pool } from 'pg'
 
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL || 'postgresql://postgres:mysecretpassword@localhost/postgres',
+  connectionString: process.env.DATABASE_URL || 'postgresql://postgres:password@localhost/postgres',
   ssl: process.env.DATABASE_URL?.includes('ondigitalocean.com') ? {
     rejectUnauthorized: false
   } : false,
