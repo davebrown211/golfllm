@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
 import StartupManager from '@/lib/startup'
-import { scheduler } from '@/lib/scheduler'
 import pool from '@/lib/database'
 
 export async function GET() {
@@ -16,9 +15,6 @@ export async function GET() {
       dbStatus = 'error'
     }
 
-    // Get scheduler status
-    const schedulerStatus = scheduler.getStatus()
-    
     // Get startup manager status
     const startupStatus = StartupManager.getStatus()
 
@@ -27,9 +23,10 @@ export async function GET() {
         initialized: startupStatus.initialized,
         database: dbStatus,
         scheduler: {
-          running: schedulerStatus.isRunning,
-          tasks: schedulerStatus.activeTasks,
-          count: schedulerStatus.tasksCount
+          running: false,
+          tasks: [],
+          count: 0,
+          note: 'Scheduler removed from frontend - using Python backend'
         }
       },
       server_time: new Date().toISOString(),
@@ -52,14 +49,14 @@ export async function POST() {
     await StartupManager.initialize()
     
     const status = StartupManager.getStatus()
-    const schedulerStatus = scheduler.getStatus()
     
     return NextResponse.json({
       message: 'Startup initialization completed',
       status: {
         initialized: status.initialized,
-        scheduler_running: schedulerStatus.isRunning,
-        scheduler_tasks: schedulerStatus.tasksCount
+        scheduler_running: false,
+        scheduler_tasks: 0,
+        note: 'Frontend scheduler removed - using Python backend'
       }
     })
   } catch (error) {

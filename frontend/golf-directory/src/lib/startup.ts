@@ -1,5 +1,4 @@
 // Startup checks and initialization
-import { scheduler } from './scheduler'
 import { channelMonitor } from './channel-monitor'
 import pool from './database'
 
@@ -17,9 +16,6 @@ export class StartupManager {
       
       // 2. Initialize channel monitoring
       await this.initializeChannelMonitoring()
-      
-      // 3. Ensure scheduler is running
-      await this.ensureSchedulerRunning()
       
       this.initialized = true
       console.log('✅ StreamingRange initialization complete!')
@@ -61,31 +57,6 @@ export class StartupManager {
     }
   }
 
-  private static async ensureSchedulerRunning(): Promise<void> {
-    try {
-      // Wait a moment for scheduler auto-start
-      await new Promise(resolve => setTimeout(resolve, 6000))
-      
-      const status = scheduler.getStatus()
-      if (!status.isRunning) {
-        console.log('⚡ Starting scheduler manually...')
-        scheduler.start()
-        
-        // Verify it started
-        const newStatus = scheduler.getStatus()
-        if (newStatus.isRunning) {
-          console.log(`✅ Scheduler started with ${newStatus.tasksCount} tasks`)
-        } else {
-          console.error('❌ Failed to start scheduler')
-        }
-      } else {
-        console.log(`✅ Scheduler already running with ${status.tasksCount} tasks`)
-      }
-    } catch (error) {
-      console.error('❌ Scheduler startup failed:', error)
-      // Don't throw - scheduler can be started manually later
-    }
-  }
 
   static getStatus(): { initialized: boolean } {
     return { initialized: this.initialized }
