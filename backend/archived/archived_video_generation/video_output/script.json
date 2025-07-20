@@ -1,0 +1,132 @@
+{
+  "title": "Trick Shot Competition - Phil Mickelson vs Grant Horvat",
+  "total_duration": "3:00",
+  "concept": "Overconfident Phil Mickelson challenges nervous Grant Horvat to a trick shot competition",
+  "scenes": [
+    {
+      "scene_number": 1,
+      "duration": "0:00-0:30",
+      "location": "Golf course/driving range",
+      "description": "Challenge setup and initial trash talk",
+      "dialogue": [
+        {
+          "character": "Phil Mickelson",
+          "line": "I could do this with my eyes closed",
+          "action": "Adjusts golf cap confidently, takes practice swing"
+        },
+        {
+          "character": "Grant Horvat",
+          "line": "Alright, let's give this a shot",
+          "action": "Fidgets with golf club, looks uncertain"
+        },
+        {
+          "character": "Phil Mickelson",
+          "line": "I'm about to show you how a real golfer plays this game!",
+          "action": "Points confidently at target"
+        }
+      ]
+    },
+    {
+      "scene_number": 2,
+      "duration": "0:30-2:00",
+      "location": "Challenge location",
+      "description": "Trick Shot Competition attempt",
+      "dialogue": [
+        {
+          "character": "Grant Horvat",
+          "line": "Tiger would have though.",
+          "action": "Takes careful, methodical approach"
+        },
+        {
+          "character": "Narrator",
+          "line": "Surprisingly, Grant Horvat nails it!",
+          "action": "Cut to successful shot"
+        },
+        {
+          "character": "Phil Mickelson",
+          "line": "Hold my drink, watch this!",
+          "action": "Steps up overly confident, doesn't even line up properly"
+        },
+        {
+          "character": "Narrator",
+          "line": "And Phil Mickelson completely whiffs it...",
+          "action": "Cut to embarrassing failure"
+        }
+      ]
+    },
+    {
+      "scene_number": 3,
+      "duration": "2:00-3:00",
+      "location": "Same location",
+      "description": "Character reactions and wrap-up",
+      "dialogue": [
+        {
+          "character": "Phil Mickelson",
+          "line": "This club feels different today",
+          "action": "Makes excuses, blames equipment"
+        },
+        {
+          "character": "Grant Horvat",
+          "line": "Fairways don't bother me...not when you have the right driver in your hand. ...wait, did I actually do it?",
+          "action": "Modest celebration, can't believe they won"
+        },
+        {
+          "character": "Narrator",
+          "line": "Lesson learned: Confidence doesn't always equal performance!",
+          "action": "Freeze frame on both characters"
+        }
+      ]
+    }
+  ],
+  "character_notes": {
+    "Phil Mickelson": {
+      "costume": {
+        "clothing": "Golf apparel, often with branding. Wears distinctive glasses.",
+        "accessories": "Performance glasses (often the subject of jokes)",
+        "distinctive_features": "Graying hair, often styled neatly."
+      },
+      "personality": {
+        "confidence": 9.0,
+        "humor": 7.0,
+        "key_traits": {
+          "speaking_style": "casual, confident, sometimes condescending",
+          "skill_level": "pro",
+          "playing_style": "aggressive, often relies on luck",
+          "celebration_style": "subdued when losing, boastful when winning"
+        }
+      },
+      "acting_notes": [
+        "Act overly confident, almost cocky",
+        "Use exaggerated gestures and posture"
+      ]
+    },
+    "Grant Horvat": {
+      "costume": {
+        "clothing": "Golf apparel.",
+        "accessories": null,
+        "distinctive_features": "Dark hair and beard."
+      },
+      "personality": {
+        "confidence": 6.0,
+        "humor": 5.0,
+        "key_traits": {
+          "speaking_style": "Enthusiastic commentator/supporter",
+          "skill_level": "amateur",
+          "playing_style": "Relatively consistent",
+          "celebration_style": "Subdued, mainly supportive"
+        }
+      },
+      "acting_notes": []
+    }
+  },
+  "production_notes": [
+    "Film in 4K for crisp golf action shots",
+    "Use multiple camera angles for challenge attempts",
+    "Capture close-ups of facial reactions",
+    "Include slow-motion replays of key moments",
+    "Add upbeat background music during setup",
+    "Use dramatic music for challenge attempts",
+    "Include text overlays for score tracking",
+    "Film B-roll of golf course/equipment"
+  ]
+}

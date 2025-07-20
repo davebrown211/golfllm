@@ -1,0 +1,67 @@
+{
+  "daily_trending": [
+    {
+      "rank": 1,
+      "title": "I Played With Tiger Woods at Augusta National!",
+      "channel": "Good Good",
+      "views": "2,847,392",
+      "likes": "187,294",
+      "engagement": "6.84%",
+      "published": "2025-07-04",
+      "url": "https://youtube.com/watch?v=abc123",
+      "thumbnail": "https://i.ytimg.com/vi/abc123/maxresdefault.jpg"
+    },
+    {
+      "rank": 2,
+      "title": "Testing the NEW TaylorMade Qi10 Driver",
+      "channel": "Rick Shiels Golf",
+      "views": "892,471",
+      "likes": "42,847",
+      "engagement": "5.02%",
+      "published": "2025-07-03",
+      "url": "https://youtube.com/watch?v=def456",
+      "thumbnail": "https://i.ytimg.com/vi/def456/maxresdefault.jpg"
+    },
+    {
+      "rank": 3,
+      "title": "How to Break 80 - Course Management Secrets",
+      "channel": "Golf Sidekick",
+      "views": "423,891",
+      "likes": "28,947",
+      "engagement": "7.12%",
+      "published": "2025-07-04",
+      "url": "https://youtube.com/watch?v=ghi789",
+      "thumbnail": "https://i.ytimg.com/vi/ghi789/maxresdefault.jpg"
+    }
+  ],
+  "top_channels": [
+    {
+      "channel": "Rick Shiels Golf",
+      "videos_tracked": 47,
+      "total_views": "127,394,821",
+      "avg_engagement": "5.83%",
+      "url": "https://youtube.com/channel/UCg123"
+    },
+    {
+      "channel": "Good Good",
+      "videos_tracked": 38,
+      "total_views": "98,472,193",
+      "avg_engagement": "6.94%",
+      "url": "https://youtube.com/channel/UCg456"
+    },
+    {
+      "channel": "TXG - Tour Experience Golf",
+      "videos_tracked": 52,
+      "total_views": "84,729,481",
+      "avg_engagement": "4.27%",
+      "url": "https://youtube.com/channel/UCg789"
+    }
+  ],
+  "categories": {
+    "instruction": 234,
+    "equipment": 189,
+    "vlogs": 312,
+    "tour": 98,
+    "highlights": 143
+  }
+}

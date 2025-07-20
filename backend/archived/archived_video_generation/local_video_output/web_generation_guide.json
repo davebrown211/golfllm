@@ -1,0 +1,51 @@
+{
+  "title": "Web-based Character Generation Guide",
+  "recommended_platforms": {
+    "leonardo_ai": {
+      "url": "https://leonardo.ai",
+      "free_tier": "15 generations per day",
+      "model": "DreamShaper v7",
+      "style": "Cinematic or Anime",
+      "steps": [
+        "1. Sign up for free account",
+        "2. Click 'AI Image Generation'",
+        "3. Select 'DreamShaper v7' model",
+        "4. Paste positive prompt",
+        "5. Add negative prompt",
+        "6. Set dimensions to 768x512 (landscape)",
+        "7. Generate 4 images",
+        "8. Download best ones"
+      ]
+    },
+    "playground_ai": {
+      "url": "https://playgroundai.com",
+      "free_tier": "100 generations per day",
+      "model": "Stable Diffusion XL",
+      "features": "Higher quality, more realistic"
+    },
+    "bing_creator": {
+      "url": "https://www.bing.com/images/create",
+      "free_tier": "Unlimited with Microsoft account",
+      "model": "DALL-E 3",
+      "features": "Very high quality, excellent at following prompts"
+    }
+  },
+  "character_specifications": {
+    "phil_mickelson": {
+      "key_features": "Distinctive glasses, graying hair, confident pose",
+      "clothing": "Golf apparel with branding",
+      "setting": "Professional golf course"
+    },
+    "steve": {
+      "key_features": "Yellow polo shirt, casual style",
+      "clothing": "Play Yellow polo, casual golf attire",
+      "setting": "Golf course, relaxed atmosphere"
+    }
+  },
+  "tips": [
+    "Generate multiple variations of each character",
+    "Save high-resolution versions",
+    "Keep consistent lighting/style across characters",
+    "Test different poses: standing, mid-swing, celebrating"
+  ]
+}

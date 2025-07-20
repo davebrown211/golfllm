@@ -1,0 +1,31 @@
+# Golf Directory Scheduler Requirements
+# Core dependencies
+psycopg2-binary==2.9.9
+python-dotenv==1.0.0
+schedule==1.2.0
+
+# YouTube API
+google-api-python-client==2.108.0
+google-auth==2.23.4
+google-auth-oauthlib==1.1.0
+
+# AI Processing
+google-generativeai==0.3.2
+
+# Audio generation (ElevenLabs)
+elevenlabs==0.2.26
+
+# Video processing
+yt-dlp==2023.11.16
+
+# Database
+SQLAlchemy==2.0.23
+
+# HTTP requests
+requests==2.31.0
+
+# Async support (optional)
+asyncio==3.4.3
+
+# Logging and utilities
+python-dateutil==2.8.2

@@ -1,0 +1,101 @@
+{
+  "scene": 2,
+  "dialogue_tracks": [
+    {
+      "track_number": 1,
+      "character": "Grant Horvat",
+      "text": "Tiger would have though.",
+      "voice_profile": {
+        "tone": "confident",
+        "pace": "medium",
+        "accent": "American",
+        "pitch": "medium"
+      },
+      "timing": "Scene timestamp TBD",
+      "ai_voice_notes": {
+        "platform": "ElevenLabs, Murf, or similar AI voice",
+        "voice_characteristics": {
+          "tone": "confident",
+          "pace": "medium",
+          "accent": "American",
+          "pitch": "medium"
+        },
+        "emotion": "neutral/conversational",
+        "pace": "natural conversational pace"
+      }
+    },
+    {
+      "track_number": 2,
+      "character": "Narrator",
+      "text": "Surprisingly, Grant Horvat nails it!",
+      "voice_profile": {
+        "tone": "confident",
+        "pace": "medium",
+        "accent": "American",
+        "pitch": "medium"
+      },
+      "timing": "Scene timestamp TBD",
+      "ai_voice_notes": {
+        "platform": "ElevenLabs, Murf, or similar AI voice",
+        "voice_characteristics": {
+          "tone": "confident",
+          "pace": "medium",
+          "accent": "American",
+          "pitch": "medium"
+        },
+        "emotion": "confident/excited",
+        "pace": "natural conversational pace"
+      }
+    },
+    {
+      "track_number": 3,
+      "character": "Phil Mickelson",
+      "text": "Hold my drink, watch this!",
+      "voice_profile": {
+        "tone": "confident, slightly cocky",
+        "pace": "fast, assertive",
+        "accent": "American",
+        "pitch": "medium"
+      },
+      "timing": "Scene timestamp TBD",
+      "ai_voice_notes": {
+        "platform": "ElevenLabs, Murf, or similar AI voice",
+        "voice_characteristics": {
+          "tone": "confident, slightly cocky",
+          "pace": "fast, assertive",
+          "accent": "American",
+          "pitch": "medium"
+        },
+        "emotion": "confident/excited",
+        "pace": "natural conversational pace"
+      }
+    },
+    {
+      "track_number": 4,
+      "character": "Narrator",
+      "text": "And Phil Mickelson completely whiffs it...",
+      "voice_profile": {
+        "tone": "confident",
+        "pace": "medium",
+        "accent": "American",
+        "pitch": "medium"
+      },
+      "timing": "Scene timestamp TBD",
+      "ai_voice_notes": {
+        "platform": "ElevenLabs, Murf, or similar AI voice",
+        "voice_characteristics": {
+          "tone": "confident",
+          "pace": "medium",
+          "accent": "American",
+          "pitch": "medium"
+        },
+        "emotion": "neutral/conversational",
+        "pace": "natural conversational pace"
+      }
+    }
+  ],
+  "background_audio": {
+    "golf_course_ambience": "Light wind, birds chirping",
+    "music": "Upbeat golf-themed background music"
+  }
+}

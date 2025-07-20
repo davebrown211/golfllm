@@ -1,0 +1,52 @@
+{
+  "scene": 1,
+  "duration": "0:00-0:30",
+  "location": "Golf course/driving range",
+  "description": "Challenge setup and initial trash talk",
+  "video_prompt": "Golf course scene: Challenge setup and initial trash talk, Location: Golf course/driving range, Actions: Adjusts golf cap confidently, takes practice swing, Fidgets with golf club, looks uncertain, Points confidently at target, professional golf course, high quality video, cinematic lighting",
+  "dialogue": [
+    {
+      "character": {
+        "name": "Phillis Mickelson",
+        "age": 52,
+        "gender": "male",
+        "nationality": "American",
+        "occupation": "Professional golfer",
+        "appearance": "Looks like Phil Mickelson, but with longer hair and a womanly shape"
+      },
+      "line": "I could do this with my eyes closed",
+      "action": "Adjusts golf cap confidently, takes practice swing"
+    },
+    {
+      "character": {
+        "name": "Grant Horvati",
+        "age": 30,
+        "gender": "male",
+        "nationality": "American",
+        "occupation": "Professional golfer",
+        "appearance": "Looks like Grant Horvat, but way more Italian and greasy"
+      },
+      "line": "Alright, let's give this a shot",
+      "action": "Fidgets with golf club, looks uncertain"
+    },
+    {
+      "character": "Phil Mickelson",
+      "line": "I'm about to show you how a real golfer plays this game!",
+      "action": "Points confidently at target"
+    }
+  ],
+  "camera_notes": [
+    "Start with wide shot of golf course",
+    "Cut to medium shots of characters",
+    "Close-ups for dialogue delivery",
+    "Action shots for golf swings",
+    "Reaction shots for comedy timing"
+  ],
+  "ai_generation_notes": {
+    "platform": "Runway Gen-3 or Stable Video Diffusion",
+    "prompt": "Golf course scene: Challenge setup and initial trash talk, Location: Golf course/driving range, Actions: Adjusts golf cap confidently, takes practice swing, Fidgets with golf club, looks uncertain, Points confidently at target, professional golf course, high quality video, cinematic lighting",
+    "duration": "5-10 second clips",
+    "style": "realistic, professional golf course setting",
+    "characters": "Use character reference images as input"
+  }
+}

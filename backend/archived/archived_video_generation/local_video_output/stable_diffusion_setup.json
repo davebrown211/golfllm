@@ -1,0 +1,27 @@
+{
+  "tool": "Automatic1111 WebUI (Stable Diffusion)",
+  "installation": {
+    "step_1": "git clone https://github.com/AUTOMATIC1111/stable-diffusion-webui.git",
+    "step_2": "cd stable-diffusion-webui",
+    "step_3": "./webui.sh (Mac/Linux) or webui-user.bat (Windows)",
+    "step_4": "Open http://127.0.0.1:7860 in browser"
+  },
+  "character_prompts": {
+    "Phil Mickelson": {
+      "positive_prompt": "Professional photo of Phil Mickelson, Golf apparel, often with branding. Wears distinctive glasses., Performance glasses (often the subject of jokes), Graying hair, often styled neatly., golf course background, high quality, photorealistic, professional photography",
+      "negative_prompt": "blurry, low quality, cartoon, anime, painting, sketch, bad anatomy, watermark",
+      "style": "Realistic, professional sports photography"
+    },
+    "Steve": {
+      "positive_prompt": "Professional photo of Steve, Play Yellow polo, casual golf attire, Butterhead putter cover, Not distinctive, golf course background, high quality, photorealistic, professional photography",
+      "negative_prompt": "blurry, low quality, cartoon, anime, painting, sketch, bad anatomy, watermark",
+      "style": "Realistic, professional sports photography"
+    }
+  },
+  "settings": {
+    "model": "Realistic Vision v5.1 or DreamShaper",
+    "steps": "20-30",
+    "cfg_scale": "7-8",
+    "size": "512x768 (portrait) or 768x512 (landscape)"
+  }
+}

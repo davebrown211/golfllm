@@ -1,0 +1,32 @@
+{
+  "project_title": "Trick Shot Competition - Phil Mickelson vs Grant Horvat",
+  "total_duration": "3:00",
+  "concept": "Overconfident Phil Mickelson challenges nervous Grant Horvat to a trick shot competition",
+  "production_workflow": {
+    "step_1": "Generate character reference images using provided prompts",
+    "step_2": "Create scene videos using AI video generation platform",
+    "step_3": "Generate character voices using AI voice synthesis",
+    "step_4": "Edit scenes together with dialogue sync",
+    "step_5": "Add background music and sound effects",
+    "step_6": "Color grade and add golf-themed graphics"
+  },
+  "ai_platforms_needed": {
+    "image_generation": "DALL-E 3, Midjourney, or Stable Diffusion",
+    "video_generation": "Runway Gen-3, Stable Video Diffusion, or Pika Labs",
+    "voice_synthesis": "ElevenLabs, Murf, or Speechify",
+    "video_editing": "Final Cut Pro, Premiere Pro, or DaVinci Resolve"
+  },
+  "estimated_costs": {
+    "character_images": "$10-20 (4-8 images)",
+    "scene_videos": "$50-100 (3 scenes, multiple clips)",
+    "voice_synthesis": "$10-30 (dialogue audio)",
+    "total_estimate": "$70-150"
+  },
+  "timeline": {
+    "character_refs": "1-2 hours",
+    "scene_generation": "4-6 hours",
+    "audio_creation": "2-3 hours",
+    "video_editing": "3-4 hours",
+    "total_time": "10-15 hours"
+  }
+}

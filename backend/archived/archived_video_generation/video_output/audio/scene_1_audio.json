@@ -1,0 +1,78 @@
+{
+  "scene": 1,
+  "dialogue_tracks": [
+    {
+      "track_number": 1,
+      "character": "Phil Mickelson",
+      "text": "I could do this with my eyes closed",
+      "voice_profile": {
+        "tone": "confident, slightly cocky",
+        "pace": "fast, assertive",
+        "accent": "American",
+        "pitch": "medium"
+      },
+      "timing": "Scene timestamp TBD",
+      "ai_voice_notes": {
+        "platform": "ElevenLabs, Murf, or similar AI voice",
+        "voice_characteristics": {
+          "tone": "confident, slightly cocky",
+          "pace": "fast, assertive",
+          "accent": "American",
+          "pitch": "medium"
+        },
+        "emotion": "neutral/conversational",
+        "pace": "natural conversational pace"
+      }
+    },
+    {
+      "track_number": 2,
+      "character": "Grant Horvat",
+      "text": "Alright, let's give this a shot",
+      "voice_profile": {
+        "tone": "confident",
+        "pace": "medium",
+        "accent": "American",
+        "pitch": "medium"
+      },
+      "timing": "Scene timestamp TBD",
+      "ai_voice_notes": {
+        "platform": "ElevenLabs, Murf, or similar AI voice",
+        "voice_characteristics": {
+          "tone": "confident",
+          "pace": "medium",
+          "accent": "American",
+          "pitch": "medium"
+        },
+        "emotion": "neutral/conversational",
+        "pace": "natural conversational pace"
+      }
+    },
+    {
+      "track_number": 3,
+      "character": "Phil Mickelson",
+      "text": "I'm about to show you how a real golfer plays this game!",
+      "voice_profile": {
+        "tone": "confident, slightly cocky",
+        "pace": "fast, assertive",
+        "accent": "American",
+        "pitch": "medium"
+      },
+      "timing": "Scene timestamp TBD",
+      "ai_voice_notes": {
+        "platform": "ElevenLabs, Murf, or similar AI voice",
+        "voice_characteristics": {
+          "tone": "confident, slightly cocky",
+          "pace": "fast, assertive",
+          "accent": "American",
+          "pitch": "medium"
+        },
+        "emotion": "confident/excited",
+        "pace": "natural conversational pace"
+      }
+    }
+  ],
+  "background_audio": {
+    "golf_course_ambience": "Light wind, birds chirping",
+    "music": "Upbeat golf-themed background music"
+  }
+}

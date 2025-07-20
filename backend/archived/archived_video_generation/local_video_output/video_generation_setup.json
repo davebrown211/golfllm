@@ -1,0 +1,26 @@
+{
+  "primary_option": {
+    "tool": "Stable Video Diffusion (SVD)",
+    "installation": {
+      "step_1": "git clone https://github.com/Stability-AI/generative-models.git",
+      "step_2": "cd generative-models",
+      "step_3": "pip install -r requirements.txt",
+      "step_4": "Download SVD model weights"
+    },
+    "usage": "Convert character images to short video clips",
+    "limitations": "2-4 second clips, requires good GPU"
+  },
+  "alternative_option": {
+    "tool": "AnimateDiff",
+    "installation": {
+      "step_1": "git clone https://github.com/guoyww/AnimateDiff.git",
+      "step_2": "Follow installation instructions in README"
+    },
+    "usage": "Generate longer animations from text prompts"
+  },
+  "simple_option": {
+    "tool": "Image-to-Video with interpolation",
+    "method": "Use RIFE or DAIN for frame interpolation",
+    "description": "Create smooth video from multiple character poses"
+  }
+}

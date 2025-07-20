@@ -1,0 +1,78 @@
+{
+  "scene": 3,
+  "dialogue_tracks": [
+    {
+      "track_number": 1,
+      "character": "Phil Mickelson",
+      "text": "This club feels different today",
+      "voice_profile": {
+        "tone": "confident, slightly cocky",
+        "pace": "fast, assertive",
+        "accent": "American",
+        "pitch": "medium"
+      },
+      "timing": "Scene timestamp TBD",
+      "ai_voice_notes": {
+        "platform": "ElevenLabs, Murf, or similar AI voice",
+        "voice_characteristics": {
+          "tone": "confident, slightly cocky",
+          "pace": "fast, assertive",
+          "accent": "American",
+          "pitch": "medium"
+        },
+        "emotion": "neutral/conversational",
+        "pace": "natural conversational pace"
+      }
+    },
+    {
+      "track_number": 2,
+      "character": "Grant Horvat",
+      "text": "Fairways don't bother me...not when you have the right driver in your hand. ...wait, did I actually do it?",
+      "voice_profile": {
+        "tone": "confident",
+        "pace": "medium",
+        "accent": "American",
+        "pitch": "medium"
+      },
+      "timing": "Scene timestamp TBD",
+      "ai_voice_notes": {
+        "platform": "ElevenLabs, Murf, or similar AI voice",
+        "voice_characteristics": {
+          "tone": "confident",
+          "pace": "medium",
+          "accent": "American",
+          "pitch": "medium"
+        },
+        "emotion": "uncertain/questioning",
+        "pace": "natural conversational pace"
+      }
+    },
+    {
+      "track_number": 3,
+      "character": "Narrator",
+      "text": "Lesson learned: Confidence doesn't always equal performance!",
+      "voice_profile": {
+        "tone": "confident",
+        "pace": "medium",
+        "accent": "American",
+        "pitch": "medium"
+      },
+      "timing": "Scene timestamp TBD",
+      "ai_voice_notes": {
+        "platform": "ElevenLabs, Murf, or similar AI voice",
+        "voice_characteristics": {
+          "tone": "confident",
+          "pace": "medium",
+          "accent": "American",
+          "pitch": "medium"
+        },
+        "emotion": "confident/excited",
+        "pace": "natural conversational pace"
+      }
+    }
+  ],
+  "background_audio": {
+    "golf_course_ambience": "Light wind, birds chirping",
+    "music": "Upbeat golf-themed background music"
+  }
+}

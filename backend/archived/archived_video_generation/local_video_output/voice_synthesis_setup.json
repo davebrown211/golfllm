@@ -1,0 +1,86 @@
+{
+  "recommended_option": {
+    "tool": "Bark (Suno AI)",
+    "installation": {
+      "step_1": "pip install bark",
+      "step_2": "python -c 'from bark import generate_audio'",
+      "step_3": "First run downloads models automatically"
+    },
+    "features": [
+      "Multiple voice presets",
+      "Different emotions and tones",
+      "Background sound effects",
+      "Multiple languages"
+    ]
+  },
+  "alternative_option": {
+    "tool": "Tortoise TTS",
+    "installation": {
+      "step_1": "git clone https://github.com/neonbjb/tortoise-tts.git",
+      "step_2": "pip install -r requirements.txt"
+    },
+    "features": [
+      "Higher quality voice cloning",
+      "Custom voice training",
+      "More realistic speech"
+    ]
+  },
+  "dialogue_scripts": {
+    "Phil Mickelson": [
+      {
+        "text": "Watch and learn, amateur",
+        "scene": 1,
+        "emotion": "neutral"
+      },
+      {
+        "text": "I'm about to show you how a real golfer plays this game!",
+        "scene": 1,
+        "emotion": "excited"
+      },
+      {
+        "text": "Hold my drink, watch this!",
+        "scene": 2,
+        "emotion": "excited"
+      },
+      {
+        "text": "The wind changed at the last second",
+        "scene": 3,
+        "emotion": "defensive"
+      }
+    ],
+    "Steve": [
+      {
+        "text": "I don't know about this...",
+        "scene": 1,
+        "emotion": "neutral"
+      },
+      {
+        "text": "Talk dirty to me",
+        "scene": 2,
+        "emotion": "neutral"
+      },
+      {
+        "text": "Talk dirty to me ...wait, did I actually do it?",
+        "scene": 3,
+        "emotion": "questioning"
+      }
+    ],
+    "Narrator": [
+      {
+        "text": "Surprisingly, Steve nails it!",
+        "scene": 2,
+        "emotion": "excited"
+      },
+      {
+        "text": "And Phil Mickelson completely whiffs it...",
+        "scene": 2,
+        "emotion": "neutral"
+      },
+      {
+        "text": "Lesson learned: Confidence doesn't always equal performance!",
+        "scene": 3,
+        "emotion": "excited"
+      }
+    ]
+  }
+}
