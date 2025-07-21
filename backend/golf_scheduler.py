@@ -145,6 +145,7 @@ class GolfScheduler:
         self.ai_processor = AIProcessor(google_api_key, elevenlabs_api_key)
         self.db_manager = DatabaseManager(self.db_url)
         self.daily_quota_limit = 10000
+        self.quota_reserve_percentage = 0.2  # Reserve 20% for essential operations
         
         # Whitelisted channel IDs (from Next.js content-whitelist.ts)
         self.whitelisted_channels = [
@@ -182,6 +183,35 @@ class GolfScheduler:
         ]
         
         logger.info("Golf Scheduler initialized")
+    
+    def get_current_quota_usage(self) -> int:
+        """Get current day's quota usage"""
+        try:
+            with self.db_manager.get_connection() as conn:
+                with conn.cursor() as cur:
+                    today = datetime.now().strftime('%Y-%m-%d')
+                    cur.execute("""
+                        SELECT COALESCE(search_operations * 100 + video_list_operations + channel_list_operations, 0)
+                        FROM api_quota_usage 
+                        WHERE date = %s
+                    """, (today,))
+                    row = cur.fetchone()
+                    return row[0] if row else 0
+        except Exception as e:
+            logger.error(f"Error getting quota usage: {e}")
+            return 0
+    
+    def get_dynamic_batch_size(self) -> int:
+        """Get dynamic batch size based on quota usage"""
+        current_usage = self.get_current_quota_usage()
+        usage_percentage = current_usage / self.daily_quota_limit
+        
+        if usage_percentage > 0.8:
+            return 25  # Smaller batches when quota is tight
+        elif usage_percentage > 0.6:
+            return 35  # Medium batches
+        else:
+            return 50  # Full batches when plenty of quota
     
     def can_perform_operation(self, operation_type: str, count: int = 1) -> bool:
         """Check if we have quota for the operation (matches Next.js quota-tracker)"""
@@ -298,7 +328,7 @@ class GolfScheduler:
                          LIMIT 20)
                     )
                     SELECT id FROM user_facing_videos
-                    WHERE updated_at <= NOW() - INTERVAL '10 minutes'
+                    WHERE updated_at <= NOW() - INTERVAL '30 minutes'  -- Increased from 10 minutes
                        OR published_at >= NOW() - INTERVAL '12 hours'
                     ORDER BY priority, view_count DESC 
                     LIMIT 70
@@ -313,8 +343,8 @@ class GolfScheduler:
                     
                     logger.info(f"Updating view counts for {len(video_ids)} user-facing videos")
                     
-                    # Update videos in batches of 50 (matches Next.js)
-                    batch_size = 50
+                    # Dynamic batch sizing based on current quota usage
+                    batch_size = self.get_dynamic_batch_size()
                     batches = [video_ids[i:i + batch_size] for i in range(0, len(video_ids), batch_size)]
                     
                     for batch in batches:
@@ -342,10 +372,19 @@ class GolfScheduler:
     
     def perform_collect_today_videos(self):
         """
-        Collect today videos + AI (every 30 minutes)
+        Collect today videos + AI (every 2 hours)
         Matches Next.js scheduler performCollectTodayVideos() exactly
         """
         logger.info("Starting collect today videos...")
+        
+        # Check if we have enough quota remaining (with reserve)
+        current_usage = self.get_current_quota_usage()
+        remaining = self.daily_quota_limit - current_usage
+        reserve_amount = self.daily_quota_limit * self.quota_reserve_percentage
+        
+        if remaining < reserve_amount:
+            logger.warning(f"Skipping today collection - quota reserve reached. Usage: {current_usage}/{self.daily_quota_limit}")
+            return
         
         try:
             # Step 1: Collect today's videos (matches /api/collect-today-videos)
@@ -543,8 +582,8 @@ class GolfScheduler:
                     
                     logger.info(f"Maintenance update for {len(video_ids)} older popular videos")
                     
-                    # Process in batches of 50 (matches Next.js)
-                    batch_size = 50
+                    # Dynamic batch sizing for maintenance updates too
+                    batch_size = self.get_dynamic_batch_size()
                     batches = [video_ids[i:i + batch_size] for i in range(0, len(video_ids), batch_size)]
                     
                     for batch in batches:
@@ -574,15 +613,15 @@ class GolfScheduler:
         """Start the scheduler with the 3 refined tasks"""
         logger.info("Starting Golf Directory Python Scheduler")
         logger.info("Tasks:")
-        logger.info("- View count updates: Every 2 minutes")
-        logger.info("- Collect today videos + AI: Every 30 minutes")
-        logger.info("- Collect whitelisted channels: Every 30 minutes")
+        logger.info("- View count updates: Every 5 minutes (reduced from 2)")
+        logger.info("- Collect today videos + AI: Every 2 hours (reduced from 30 minutes)")
+        logger.info("- Collect whitelisted channels: Every 2 hours (reduced from 30 minutes)")
         logger.info("- Daily maintenance: Every day at 3 AM")
         
-        # Schedule the 4 tasks (matches Next.js frequencies exactly)
-        schedule.every(2).minutes.do(self.perform_view_count_updates)
-        schedule.every(30).minutes.do(self.perform_collect_today_videos)
-        schedule.every(30).minutes.do(self.perform_collect_whitelisted_videos)  # Every 30 minutes
+        # Schedule the 4 tasks (optimized for quota usage)
+        schedule.every(5).minutes.do(self.perform_view_count_updates)  # Reduced frequency by 60%
+        schedule.every(2).hours.do(self.perform_collect_today_videos)  # Reduced frequency by 75%
+        schedule.every(2).hours.do(self.perform_collect_whitelisted_videos)  # Reduced frequency by 75%
         schedule.every().day.at("03:00").do(self.perform_maintenance_update)
         
         # Run initial collections on startup
