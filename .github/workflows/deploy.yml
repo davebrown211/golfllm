@@ -12,11 +12,11 @@ jobs:
     - uses: actions/checkout@v3
     
     - name: Deploy to DigitalOcean Droplet
-      uses: appleboy/ssh-action@v1.0.0
+      uses: appleboy/ssh-action@v0.1.11
       with:
         host: ${{ secrets.DROPLET_IP }}
         username: root
-        key: ${{ secrets.DROPLET_SSH_KEY }}
+        password: ${{ secrets.DROPLET_PASSWORD }}
         script: |
           # Navigate to project directory
           cd /root/golfllm
