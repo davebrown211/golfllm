@@ -148,9 +148,9 @@ class AIProcessor:
         
         return ' '.join(transcript_lines)
     
-    def generate_jim_nantz_summary(self, transcript: str, video_title: str) -> Optional[str]:
+    def generate_announcer_summary(self, transcript: str, video_title: str) -> Optional[str]:
         """
-        Generate Jim Nantz-style trailer summary (matches Next.js Gemini prompt exactly)
+        Generate golf announcer-style trailer summary (matches Next.js Gemini prompt exactly)
         """
         if not self.genai_model:
             logger.error("Gemini API not configured")
@@ -158,12 +158,12 @@ class AIProcessor:
         
         try:
             # Exact prompt from Next.js
-            prompt = f"""You are channeling the legendary golf announcer Jim Nantz. Create a compelling TRAILER-STYLE preview in Jim's distinctive broadcasting style for this golf video: "{video_title}"
+            prompt = f"""You are channeling a legendary golf announcer. Create a compelling TRAILER-STYLE preview in a distinctive broadcasting style for this golf video: "{video_title}"
 
 Based on this transcript: {transcript[:4000]}
 
 Guidelines:
-- Channel Jim Nantz's warm, sophisticated, and reverent tone
+- Channel a warm, sophisticated, and reverent broadcasting tone
 - Build anticipation without revealing outcomes  
 - Focus on what viewers WILL SEE, not what happens
 - Use phrases like "Coming up", "You'll witness", "We'll see"
@@ -247,7 +247,7 @@ Create a preview that captures the excitement and draws viewers in, just like Ji
             audio_dir = "/opt/golf-directory/audio"
             os.makedirs(audio_dir, exist_ok=True)
             
-            filename = f"jim-nantz-{video_id}.mp3"
+            filename = f"audio-{video_id}.mp3"
             filepath = os.path.join(audio_dir, filename)
             
             with open(filepath, 'wb') as f:
@@ -281,8 +281,8 @@ Create a preview that captures the excitement and draws viewers in, just like Ji
                 return result
             
             # Step 2: Generate AI summary
-            logger.info("Generating Jim Nantz-style summary...")
-            summary = self.generate_jim_nantz_summary(transcript, video_title)
+            logger.info("Generating announcer-style summary...")
+            summary = self.generate_announcer_summary(transcript, video_title)
             
             if not summary:
                 result['error'] = "Could not generate AI summary"

@@ -115,8 +115,8 @@ async function generateJimNantzAudio(text: string, videoId: string): Promise<str
       },
       body: JSON.stringify({
         text: cleanText,
-        voice_id: 'jim_nantz', // This might need to be adjusted based on TopMediai's actual voice ID
-        speed: 0.9, // Slightly slower for Jim Nantz's measured pace
+        voice_id: 'golf_announcer', // Professional golf announcer voice
+        speed: 0.9, // Slightly slower for measured pace
         pitch: 0.95, // Slightly lower for gravitas
         output_format: 'mp3'
       })
@@ -138,7 +138,7 @@ async function generateJimNantzAudio(text: string, videoId: string): Promise<str
     }
     
   } catch (error) {
-    console.error('Error generating Jim Nantz audio:', error)
+    console.error('Error generating audio narration:', error)
     
     // Fallback: return a placeholder or error
     throw new Error(`Audio generation failed: ${error.message}`)
@@ -151,7 +151,7 @@ async function saveBase64Audio(base64Audio: string, videoId: string): Promise<st
     const audioDir = path.join(process.cwd(), 'public', 'audio')
     await fs.mkdir(audioDir, { recursive: true })
     
-    const fileName = `jim-nantz-${videoId}.mp3`
+    const fileName = `audio-${videoId}.mp3`
     const filePath = path.join(audioDir, fileName)
     
     // Convert base64 to buffer and save

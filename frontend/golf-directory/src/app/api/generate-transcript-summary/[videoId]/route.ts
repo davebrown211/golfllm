@@ -62,9 +62,9 @@ export async function POST(
     // Download transcript and generate summary
     const summary = await generateTranscriptSummary(videoId)
     
-    // Generate Jim Nantz audio alongside the summary
+    // Generate audio narration alongside the summary
     console.log('Generating audio for video:', videoId)
-    const audioUrl = await generateJimNantzAudio(summary, videoId)
+    const audioUrl = await generateAudioNarration(summary, videoId)
     console.log('Audio URL generated:', audioUrl)
     
     // Save both summary and audio to database
@@ -259,7 +259,7 @@ async function generateGeminiSummary(transcript: string, videoDetails?: any): Pr
       throw new Error('GOOGLE_API_KEY not configured')
     }
 
-    const prompt = `You are channeling the legendary golf announcer Jim Nantz. Analyze this golf video transcript and create a compelling TRAILER-STYLE preview in Jim's distinctive broadcasting style.
+    const prompt = `You are channeling a legendary golf announcer. Analyze this golf video transcript and create a compelling TRAILER-STYLE preview in a distinctive broadcasting style.
 
 Video Details:
 ${videoDetails ? `Title: "${videoDetails.title}"` : ''}
@@ -268,7 +268,7 @@ ${videoDetails ? `Channel: ${videoDetails.channel_name}` : ''}
 Transcript:
 ${transcript}
 
-Create a TRAILER-STYLE preview (NOT a full recap) in Jim Nantz's signature style:
+Create a TRAILER-STYLE preview (NOT a full recap) in a signature broadcasting style:
 - Build anticipation and excitement without revealing outcomes or spoilers
 - Focus on what viewers WILL SEE, not what happens
 - Tease key moments, players, or situations without giving away results
@@ -339,7 +339,7 @@ function createFallbackSummary(transcript: string, videoDetails?: any): string {
   }
 }
 
-async function generateJimNantzAudio(text: string, videoId: string): Promise<string | null> {
+async function generateAudioNarration(text: string, videoId: string): Promise<string | null> {
   try {
     // ElevenLabs API configuration
     const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY
@@ -408,7 +408,7 @@ async function saveAudioBuffer(audioBuffer: ArrayBuffer, videoId: string): Promi
     const audioDir = path.join(process.cwd(), 'public', 'audio')
     await fs.mkdir(audioDir, { recursive: true })
     
-    const fileName = `jim-nantz-${videoId}.mp3`
+    const fileName = `audio-${videoId}.mp3`
     const filePath = path.join(audioDir, fileName)
     
     // Convert ArrayBuffer to Buffer and save

@@ -61,7 +61,7 @@ CRON_SECRET=secure_random_string
 ### AI Processing
 
 - **Transcript download** - yt-dlp with VTT parsing
-- **Jim Nantz summaries** - Gemini API with exact prompt
+- **Announcer-style summaries** - Gemini API with exact prompt
 - **Audio generation** - ElevenLabs with same voice
 
 ## Deployment

@@ -38,7 +38,7 @@ export async function GET(request: NextRequest, { params }: { params: { videoId:
       return new NextResponse(audioResponse, {
         headers: {
           'Content-Type': 'audio/mpeg',
-          'Content-Disposition': `inline; filename="jim-nantz-${videoId}.mp3"`,
+          'Content-Disposition': `inline; filename="audio-${videoId}.mp3"`,
           'Cache-Control': 'public, max-age=3600' // Cache for 1 hour
         }
       })
