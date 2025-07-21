@@ -1,0 +1,43 @@
+name: Deploy to DigitalOcean
+
+on:
+  push:
+    branches: [ master, main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Deploy to DigitalOcean Droplet
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.DROPLET_IP }}
+        username: root
+        key: ${{ secrets.DROPLET_SSH_KEY }}
+        script: |
+          # Navigate to project directory
+          cd /root/golfllm
+          
+          # Pull latest changes
+          git pull origin master
+          
+          # Deploy frontend
+          cd frontend/golf-directory
+          npm install
+          npm run build
+          
+          # Restart frontend service (this starts the Next.js server via systemd)
+          sudo systemctl restart golf-app
+          
+          # Deploy backend
+          cd /root/golfllm/backend
+          pip install -r requirements.txt
+          
+          # Restart Python scheduler
+          sudo systemctl restart golf-scheduler
+          
+          # Check service status
+          sudo systemctl status golf-app golf-scheduler --no-pager
