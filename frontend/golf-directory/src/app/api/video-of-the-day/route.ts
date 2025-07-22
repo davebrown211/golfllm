@@ -167,7 +167,7 @@ export async function GET() {
           character_analysis: video.character_analysis,
           captions_preview: video.captions_preview
         }) : null,
-        audio_url: video.audio_url
+        audio_url: video.audio_url ? `/api${video.audio_url}` : null
       }
       
       return NextResponse.json(videoOfTheDay, {
