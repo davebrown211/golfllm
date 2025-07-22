@@ -49,7 +49,7 @@ async function getVideo(id: string) {
       thumbnail: video.thumbnail_url,
       duration_seconds: video.duration_seconds || 0,
       ai_summary: video.ai_summary ? JSON.parse(video.ai_summary).summary : null,
-      audio_url: video.audio_url,
+      audio_url: video.audio_url ? `/api${video.audio_url}` : null,
       days_ago: Math.floor((Date.now() - new Date(video.published_at).getTime()) / (1000 * 60 * 60 * 24))
     }
   } catch (error) {

@@ -76,7 +76,7 @@ export async function GET() {
         duration_seconds: video.duration_seconds,
         is_short: video.duration_seconds && video.duration_seconds <= 60,
         days_ago: Math.floor((Date.now() - new Date(video.published_at).getTime()) / (1000 * 60 * 60 * 24)),
-        audio_url: video.audio_url,
+        audio_url: video.audio_url ? `/api${video.audio_url}` : null,
         ai_summary: video.ai_summary,
         is_video_of_day: video.video_id === currentVodId
       }))
