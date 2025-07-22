@@ -295,7 +295,7 @@ Create a preview that captures the excitement and draws viewers in, just like Ji
             audio_filename = self.generate_audio(summary, video_id)
             
             if audio_filename:
-                result['audio_url'] = f"/audio/{audio_filename}"
+                result['audio_url'] = audio_filename  # audio_filename already includes /audio/ prefix
             
             logger.info("Transcript summary generation completed successfully")
             return result
