@@ -1,0 +1,18 @@
+[Unit]
+Description=Golf Scheduler Python Service
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root/golfllm/backend
+ExecStart=/usr/bin/python3 /root/golfllm/backend/golf_scheduler.py
+Restart=on-failure
+RestartSec=10
+Environment=PYTHONUNBUFFERED=1
+Environment=GOOGLE_API_KEY=AIzaSyCx-_bIRPkMoOquZALZPsV9e05oTuTrAiE
+Environment=ELEVENLABS_API_KEY=sk_c73a2b1bbd811133904cf00f1952c7d047114b44baeb5c3a
+Environment=DATABASE_URL=postgresql://doadmin:AVNS_mboJrMNMZOHgCzl29EF@private-db-postgresql-streaming-range-do-user-24044186-0.g.db.ondigitalocean.com:25060/golf_directory
+
+[Install]
+WantedBy=multi-user.target

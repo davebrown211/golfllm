@@ -24,6 +24,10 @@ jobs:
           # Pull latest changes
           git pull origin master
           
+          # Update systemd service files
+          sudo cp systemd/*.service /etc/systemd/system/
+          sudo systemctl daemon-reload
+          
           # Deploy frontend
           cd frontend/golf-directory
           npm install
