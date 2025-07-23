@@ -83,7 +83,7 @@ export async function GET() {
             va.status as analysis_status,
             -- Calculate "freshness score" - heavily prioritize recent videos
             CASE 
-              WHEN yv.published_at >= CURRENT_DATE THEN yv.view_count * 1000   -- 1000x boost for today's videos
+              WHEN yv.published_at >= CURRENT_DATE THEN yv.view_count * 5000   -- 5000x boost for today's videos
               WHEN yv.published_at >= NOW() - '1 day'::interval THEN yv.view_count * 100    -- 100x boost for last 24h
               WHEN yv.published_at >= NOW() - '2 day'::interval THEN yv.view_count * 10     -- 10x boost for last 48h
               WHEN yv.published_at >= NOW() - '3 day'::interval THEN yv.view_count * 1      -- Raw view count for 3 days

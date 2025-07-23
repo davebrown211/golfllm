@@ -454,7 +454,7 @@ class GolfScheduler:
                       AND yv.published_at >= NOW() - INTERVAL '14 days'
                     ORDER BY 
                       CASE 
-                        WHEN yv.published_at >= NOW() - INTERVAL '1 day' THEN yv.view_count * 1000
+                        WHEN yv.published_at >= NOW() - INTERVAL '1 day' THEN yv.view_count * 5000
                         WHEN yv.published_at >= NOW() - INTERVAL '2 days' THEN yv.view_count * 100
                         WHEN yv.published_at >= NOW() - INTERVAL '3 days' THEN yv.view_count * 10
                         ELSE yv.view_count
