@@ -180,6 +180,8 @@ class GolfScheduler:
             "UCrgGz4gZxWu77Nw5RXcxlRg",  # Josh Mayer
             "UCCry5X3Phfmz0UzqRNm0BPA",  # Golf Girl Games
             "UCwMgdK0S57nEdN_RGaajwOQ",  # GOLF LIFE
+            "UCw3LGiL_bYbWrgpQ7w7QZrw",  # Fore Play Golf (Barstool Sports)
+            "UC9bPOeQN6J2Rh69jFaOhf3Q",  # Tommy Fleetwood Golf
         ]
         
         logger.info("Golf Scheduler initialized")

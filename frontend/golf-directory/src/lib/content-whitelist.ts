@@ -166,6 +166,8 @@ export const WHITELISTED_CHANNEL_IDS = [
   "UCrgGz4gZxWu77Nw5RXcxlRg", // Josh Mayer - 220K subs
   "UCCry5X3Phfmz0UzqRNm0BPA", // Golf Girl Games - 238K subs
   "UCwMgdK0S57nEdN_RGaajwOQ", // GOLF LIFE - 349K subs
+  "UCw3LGiL_bYbWrgpQ7w7QZrw", // Fore Play Golf (Barstool Sports)
+  "UC9bPOeQN6J2Rh69jFaOhf3Q", // Tommy Fleetwood Golf
 ];
 
 // Function to check if a channel is whitelisted
