@@ -8,6 +8,8 @@ export const WHITELISTED_GOLF_CREATORS = [
   "grant horvat",
   "bryan bros",
   "foreplay",
+  "fore play",
+  "fore play golf",
   "dude perfect",
   "gm golf",
   "micah morris golf",
