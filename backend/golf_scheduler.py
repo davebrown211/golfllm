@@ -442,61 +442,45 @@ class GolfScheduler:
     def generate_ai_for_video_of_day(self):
         """Generate AI analysis for video of the day if missing"""
         try:
-            with self.db_manager.get_connection() as conn:
-                with conn.cursor() as cur:
-                    # Get video of the day (matches momentum scoring from Next.js)
-                    query = """
-                    SELECT yv.id, yv.title
-                    FROM youtube_videos yv
-                    JOIN youtube_channels yc ON yv.channel_id = yc.id
-                    WHERE yv.channel_id = ANY(%s::text[])
-                      AND yv.view_count > 100
-                      AND yv.duration_seconds >= 60
-                      AND yv.thumbnail_url IS NOT NULL
-                      AND yv.published_at >= NOW() - INTERVAL '14 days'
-                    ORDER BY 
-                      CASE 
-                        WHEN yv.published_at >= NOW() - INTERVAL '1 day' THEN yv.view_count * 5000
-                        WHEN yv.published_at >= NOW() - INTERVAL '2 days' THEN yv.view_count * 100
-                        WHEN yv.published_at >= NOW() - INTERVAL '3 days' THEN yv.view_count * 10
-                        ELSE yv.view_count
-                      END DESC
-                    LIMIT 1
-                    """
-                    
-                    cur.execute(query, (self.whitelisted_channels,))
-                    video_row = cur.fetchone()
-                    
-                    if not video_row:
-                        logger.info("No video of the day candidate found")
-                        return
-                    
-                    video_id, title = video_row
-                    
-                    # Check if AI analysis exists
-                    cur.execute("""
-                        SELECT id FROM video_analyses 
-                        WHERE video_id = %s AND summary IS NOT NULL
-                    """, (video_id,))
-                    
-                    if cur.fetchone():
-                        logger.info("Video of the day already has AI analysis")
-                        return
-                    
-                    logger.info(f"Generating AI analysis for video of the day: {title} ({video_id})")
-                    
-                    # Generate AI analysis
-                    ai_result = self.ai_processor.generate_transcript_summary(video_id, title)
-                    
-                    if ai_result['summary']:
-                        # Save to database (audio_url is just the filename)
-                        self.db_manager.save_video_analysis(
-                            conn, video_id, ai_result['summary'], ai_result.get('audio_url')
-                        )
-                        conn.commit()
-                        logger.info("AI analysis saved successfully")
-                    else:
-                        logger.warning(f"AI analysis failed: {ai_result.get('error', 'Unknown error')}")
+            # Call the frontend API to get the current video of the day
+            import requests
+            
+            # Use localhost since we're on the same server
+            response = requests.get('http://localhost:3000/api/video-of-the-day')
+            
+            if response.status_code != 200:
+                logger.error(f"Failed to get video of the day from API: {response.status_code}")
+                return
+                
+            video_data = response.json()
+            video_id = video_data.get('video_id')
+            title = video_data.get('title')
+            
+            if not video_id:
+                logger.info("No video of the day found from API")
+                return
+            
+            # Check if this video already has AI analysis
+            if video_data.get('has_ai_analysis'):
+                logger.info(f"Video of the day already has AI analysis: {title}")
+                return
+                
+            logger.info(f"Video of the day needs AI analysis: {title} ({video_id})")
+            
+            # Generate AI analysis
+            logger.info(f"Generating AI analysis for video of the day: {title} ({video_id})")
+            ai_result = self.ai_processor.generate_transcript_summary(video_id, title)
+            
+            if ai_result['summary']:
+                # Save to database
+                with self.db_manager.get_connection() as conn:
+                    self.db_manager.save_video_analysis(
+                        conn, video_id, ai_result['summary'], ai_result.get('audio_url')
+                    )
+                    conn.commit()
+                    logger.info("AI analysis saved successfully")
+            else:
+                logger.warning(f"AI analysis failed: {ai_result.get('error', 'Unknown error')}")
                     
         except Exception as e:
             logger.error(f"Error generating AI for video of the day: {e}")
