@@ -158,20 +158,27 @@ class AIProcessor:
         
         try:
             # Exact prompt from Next.js
-            prompt = f"""You are channeling a legendary golf announcer. Create a compelling TRAILER-STYLE preview in a distinctive broadcasting style for this golf video: "{video_title}"
+            prompt = f"""You are "The Professor" - a golf commentator who blends Jim Nantz's elegance, Colt Knost's tour insight, and Kevin Kisner's everyman appeal. Create a compelling TRAILER-STYLE preview for this golf video: "{video_title}"
 
 Based on this transcript: {transcript[:4000]}
 
+Your Personality:
+- Sophisticated yet approachable (Jim's warmth + Kisner's relatability)
+- Tour-level golf knowledge (Colt's insider perspective)
+- Subtle humor without being goofy (Kisner's wit + Jim's class)
+- The voice of someone who's "been there" but speaks to all golfers
+
 Guidelines:
-- Channel a warm, sophisticated, and reverent broadcasting tone
-- Build anticipation without revealing outcomes  
-- Focus on what viewers WILL SEE, not what happens
-- Use phrases like "Coming up", "You'll witness", "We'll see"
+- Build anticipation without revealing outcomes
+- Focus on what viewers WILL SEE, not what happened
+- Use phrases like "Coming up", "You'll witness", "Here's what awaits"
 - MAXIMUM 60-75 words (30 seconds of speaking time)
 - End with intrigue that makes people want to watch
-- Avoid spoiling any results or outcomes
+- Blend reverence for the game with accessible commentary
 
-Create a preview that captures the excitement and draws viewers in, just like Jim would introduce a major golf moment on CBS."""
+Think: Jim Nantz introducing a moment, but with the insight of a former tour player and the humor of your weekend foursome's best storyteller.
+
+IMPORTANT: Write directly in the commentator's voice. Do NOT include tone descriptions, voice directions, or parenthetical instructions - just write the actual words that should be spoken."""
 
             response = self.genai_model.generate_content(prompt)
             
@@ -199,10 +206,17 @@ Create a preview that captures the excitement and draws viewers in, just like Ji
             # Clean the text for audio generation (matches Next.js logic)
             clean_text = text.replace('[AI-generated from video transcript]', '').replace('**', '').replace('*', '').strip()
             
+            # Remove tone/emotion instructions in brackets or parentheses 
+            clean_text = re.sub(r'\[.*?\]', '', clean_text).strip()  # Remove bracketed instructions
+            clean_text = re.sub(r'\(.*?\)', '', clean_text).strip()  # Remove parenthetical instructions
+            
+            # Remove any leading/trailing punctuation after instruction removal
+            clean_text = re.sub(r'^[,.\s]+|[,.\s]+$', '', clean_text).strip()
+            
             logger.info(f"Generating ElevenLabs audio for video {video_id}, text length: {len(clean_text)}")
             
-            # Use Grandpa Spuds Oxley voice (same as frontend)
-            voice_id = 'NOpBlnGInO9m6vDvFkFC'
+            # Use Eric voice (smooth tenor, man in his 40s)
+            voice_id = 'cjVigY5qzO86Huf0OWal'
             
             # ElevenLabs TTS API call
             url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"

@@ -10,6 +10,7 @@ from datetime import datetime, timedelta
 import googleapiclient.discovery
 from googleapiclient.errors import HttpError
 import re
+from golf_whitelist import WHITELISTED_CHANNELS
 
 logger = logging.getLogger(__name__)
 
@@ -22,40 +23,8 @@ class YouTubeClient:
             'youtube', 'v3', developerKey=api_key
         )
         
-        # Whitelisted channel IDs (matches Next.js content-whitelist.ts)
-        self.whitelisted_channels = [
-            # VALIDATED CHANNELS IN DATABASE
-            "UCfi-mPMOmche6WI-jkvnGXw",  # Good Good (main)
-            "UCbY_v56iMzSGvXK79X6f4dw",  # Good Good Extra
-            "UCqr4sONkmFEOPc3rfoVLEvg",  # Bob Does Sports
-            "UCgUueMmSpcl-aCTt5CuCKQw",  # Grant Horvat Golf
-            "UCJcc1x6emfrQquiV8Oe_pug",  # Luke Kwon Golf
-            "UCsazhBmAVDUL_WYcARQEFQA",  # The Lads
-            "UC3jFoA7_6BTV90hsRSVHoaw",  # Phil Mickelson and the HyFlyers
-            "UCfdYeBYjouhibG64ep_m4Vw",  # Micah Morris
-            "UCjchle1bmH0acutqK15_XSA",  # Brad Dalke
-            "UCdCxaD8rWfAj12rloIYS6jQ",  # Bryan Bros Golf
-            "UCB0NRdlQ6fBYQX8W8bQyoDA",  # MyTPI
-            "UCyy8ULLDGSm16_EkXdIt4Gw",  # Titleist
-            "UClJO9jvaU5mvNuP-XTbhHGw",  # TaylorMade Golf
-            # POPULAR GOLF CREATORS
-            "UCFHZHhZaH7Rc_FOMIzUziJA",  # Rick Shiels Golf
-            "UCFoez1Xjc90CsHvCzqKnLcw",  # Peter Finch Golf
-            "UCCxF55adGXOscJ3L8qdKnrQ",  # Bryson DeChambeau
-            "UCZelGnfKLXic4gDP63dIRxw",  # Mark Crossfield
-            "UCaeGjmOiTxekbGUDPKhoU-A",  # Golf Sidekick
-            "UCtNpbO2MtsVY4qW23WfnxGg",  # James Robinson Golf
-            "UCUOqlmPAo8h4pVQ4cuRECUg",  # Big Wedge Golf
-            "UClljAz6ZKy0XeViKsohdjqA",  # GM Golf
-            "UCSwdmDQhAi_-ICkAvNBLEBw",  # Danny Maude
-            "UCJolpQHWLAW6cCUYGgean8w",  # Padraig Harrington
-            "UCuXIBwKQeH9cnLOv7w66cJg",  # MrShortGame Golf
-            "UCXvDkP2X3aE9yrPavNMJv0A",  # JnA Golf
-            "UCamOYT0c_pSrSCu9c8CyEcg",  # Bryan Bros TV
-            "UCrgGz4gZxWu77Nw5RXcxlRg",  # Josh Mayer
-            "UCCry5X3Phfmz0UzqRNm0BPA",  # Golf Girl Games
-            "UCwMgdK0S57nEdN_RGaajwOQ",  # GOLF LIFE
-        ]
+        # Import whitelisted channels from centralized file and normalize to IDs
+        self.whitelisted_channels = self.normalize_channel_list(WHITELISTED_CHANNELS)
     
     def parse_duration(self, duration: str) -> int:
         """Parse ISO 8601 duration to seconds (matches Next.js logic)"""
@@ -273,6 +242,58 @@ class YouTubeClient:
                 return False
         
         return True
+    
+    def normalize_channel_identifier(self, identifier: str) -> str:
+        """Convert handle to channel ID if needed, otherwise return as-is"""
+        if identifier.startswith('@'):
+            # It's a handle, convert to ID
+            channel_info = self.get_channel_by_handle(identifier)
+            if channel_info:
+                return channel_info['id']
+            else:
+                logger.warning(f"Could not resolve handle {identifier} to channel ID")
+                return identifier  # Return as-is if we can't resolve
+        else:
+            # It's already a channel ID
+            return identifier
+    
+    def normalize_channel_list(self, identifiers: List[str]) -> List[str]:
+        """Convert a list of mixed handles/IDs to all channel IDs"""
+        normalized = []
+        for identifier in identifiers:
+            normalized_id = self.normalize_channel_identifier(identifier)
+            normalized.append(normalized_id)
+        return normalized
+    
+    def get_channel_by_handle(self, handle: str) -> Optional[Dict[str, Any]]:
+        """Get channel info by handle (e.g., @youtubegolfhighlights)"""
+        try:
+            # Remove @ if present
+            clean_handle = handle.lstrip('@')
+            
+            response = self.youtube.channels().list(
+                part='snippet,statistics,contentDetails',
+                forHandle=clean_handle
+            ).execute()
+            
+            if response.get('items'):
+                channel = response['items'][0]
+                return {
+                    'id': channel['id'],
+                    'title': channel['snippet']['title'],
+                    'description': channel['snippet']['description'],
+                    'handle': f"@{clean_handle}",
+                    'subscriber_count': int(channel['statistics'].get('subscriberCount', 0)),
+                    'video_count': int(channel['statistics'].get('videoCount', 0)),
+                    'view_count': int(channel['statistics'].get('viewCount', 0)),
+                    'thumbnail_url': channel['snippet']['thumbnails'].get('high', {}).get('url'),
+                    'uploads_playlist_id': channel['contentDetails']['relatedPlaylists']['uploads']
+                }
+            return None
+            
+        except HttpError as e:
+            logger.error(f"Error getting channel by handle {handle}: {e}")
+            return None
     
     def get_channel_info(self, channel_ids: List[str]) -> List[Dict[str, Any]]:
         """Get channel information"""

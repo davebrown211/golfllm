@@ -1,0 +1,259 @@
+{
+  "channels": [
+    {
+      "id": "UCfi-mPMOmche6WI-jkvnGXw",
+      "name": "Good Good",
+      "handle": "@goodgood"
+    },
+    {
+      "id": "UCbY_v56iMzSGvXK79X6f4dw", 
+      "name": "Good Good Extra",
+      "handle": "@goodgoodextra"
+    },
+    {
+      "id": "UCqr4sONkmFEOPc3rfoVLEvg",
+      "name": "Bob Does Sports", 
+      "handle": "@bobdoessports"
+    },
+    {
+      "id": "UCgUueMmSpcl-aCTt5CuCKQw",
+      "name": "Grant Horvat Golf",
+      "handle": "@granthorvatgolfs"
+    },
+    {
+      "id": "UCJcc1x6emfrQquiV8Oe_pug",
+      "name": "Luke Kwon Golf",
+      "handle": "@lukekwongolf"
+    },
+    {
+      "id": "UCsazhBmAVDUL_WYcARQEFQA",
+      "name": "The Lads",
+      "handle": "@thelads"
+    },
+    {
+      "id": "UC3jFoA7_6BTV90hsRSVHoaw",
+      "name": "Phil Mickelson and the HyFlyers",
+      "handle": "@philmickelsonhyflyers"
+    },
+    {
+      "id": "UCfdYeBYjouhibG64ep_m4Vw",
+      "name": "Micah Morris",
+      "handle": "@micahmorris"
+    },
+    {
+      "id": "UCjchle1bmH0acutqK15_XSA",
+      "name": "Brad Dalke",
+      "handle": "@braddalkegolf"
+    },
+    {
+      "id": "UCdCxaD8rWfAj12rloIYS6jQ",
+      "name": "Bryan Bros Golf",
+      "handle": "@bryanbrosgolf"
+    },
+    {
+      "id": "UCB0NRdlQ6fBYQX8W8bQyoDA",
+      "name": "MyTPI",
+      "handle": "@mytpi"
+    },
+    {
+      "id": "UCyy8ULLDGSm16_EkXdIt4Gw",
+      "name": "Titleist",
+      "handle": "@titleist"
+    },
+    {
+      "id": "UClJO9jvaU5mvNuP-XTbhHGw",
+      "name": "TaylorMade Golf",
+      "handle": "@taylormadegolf"
+    },
+    {
+      "id": "UCFHZHhZaH7Rc_FOMIzUziJA",
+      "name": "Rick Shiels Golf",
+      "handle": "@rickshielsgolf"
+    },
+    {
+      "id": "UCFoez1Xjc90CsHvCzqKnLcw",
+      "name": "Peter Finch Golf",
+      "handle": "@peterfinchgolf"
+    },
+    {
+      "id": "UCCxF55adGXOscJ3L8qdKnrQ",
+      "name": "Bryson DeChambeau",
+      "handle": "@brysondechambeau"
+    },
+    {
+      "id": "UCZelGnfKLXic4gDP63dIRxw",
+      "name": "Mark Crossfield",
+      "handle": "@markcrossfield"
+    },
+    {
+      "id": "UCaeGjmOiTxekbGUDPKhoU-A",
+      "name": "Golf Sidekick",
+      "handle": "@golfsidekick"
+    },
+    {
+      "id": "UCtNpbO2MtsVY4qW23WfnxGg",
+      "name": "James Robinson Golf",
+      "handle": "@jamesrobinsongolf"
+    },
+    {
+      "id": "UCUOqlmPAo8h4pVQ4cuRECUg",
+      "name": "Big Wedge Golf",
+      "handle": "@bigwedgegolf"
+    },
+    {
+      "id": "UClljAz6ZKy0XeViKsohdjqA",
+      "name": "GM Golf",
+      "handle": "@gmgolf"
+    },
+    {
+      "id": "UCSwdmDQhAi_-ICkAvNBLEBw",
+      "name": "Danny Maude",
+      "handle": "@dannymaude"
+    },
+    {
+      "id": "UCJolpQHWLAW6cCUYGgean8w",
+      "name": "Padraig Harrington",
+      "handle": "@padraigharringtonofficial"
+    },
+    {
+      "id": "UCuXIBwKQeH9cnLOv7w66cJg",
+      "name": "MrShortGame Golf",
+      "handle": "@mrshortgame"
+    },
+    {
+      "id": "UCXvDkP2X3aE9yrPavNMJv0A",
+      "name": "JnA Golf",
+      "handle": "@jnagolf"
+    },
+    {
+      "id": "UCamOYT0c_pSrSCu9c8CyEcg",
+      "name": "Bryan Bros TV",
+      "handle": "@bryanbrostv"
+    },
+    {
+      "id": "UCrgGz4gZxWu77Nw5RXcxlRg",
+      "name": "Josh Mayer",
+      "handle": "@joshmayer"
+    },
+    {
+      "id": "UCCry5X3Phfmz0UzqRNm0BPA",
+      "name": "Golf Girl Games",
+      "handle": "@golfgirlgames"
+    },
+    {
+      "id": "UCwMgdK0S57nEdN_RGaajwOQ",
+      "name": "GOLF LIFE",
+      "handle": "@golflife"
+    },
+    {
+      "id": "UCw3LGiL_bYbWrgpQ7w7QZrw",
+      "name": "Fore Play Golf",
+      "handle": "@foreplaygolf"
+    },
+    {
+      "id": "UC9bPOeQN6J2Rh69jFaOhf3Q",
+      "name": "Tommy Fleetwood Golf",
+      "handle": "@tommyfleetwoodgolf"
+    },
+    {
+      "id": "UCoIW9lB_DU6Uh7YplZgxgng",
+      "name": "Golf Mates",
+      "handle": "@golfmates"
+    },
+    {
+      "id": "UCCu14_hKYN8EfiuEl2r561g",
+      "name": "Zach Allen Golf",
+      "handle": "@zachallengolf"
+    },
+    {
+      "id": "UC75ANLdL7nPJ82LHJjYxAiw",
+      "name": "Martin Borgmeier",
+      "handle": "@MartinBorgmeierLD"
+    },
+    {
+      "id": "UCR4Yfr8HAZJd9X24dwuAt1Q",
+      "name": "Random Golf Club",
+      "handle": "@randomgolfclubfilms"
+    },
+    {
+      "id": "",
+      "name": "Youtube Golf Highlights",
+      "handle": "@youtubegolfhighlights"
+    },
+    {
+      "id": "UCnV8-YSdhrs1r7z3VCRMrCw",
+      "name": "Wesley Bryan",
+      "handle": "@wesleybryan"
+    },
+    {
+      "id": "UCGKfVunhAgXOoYru_7LzMjg",
+      "name": "Evan Thompson",
+      "handle": "@evanthompsongolf"
+    },
+    {
+      "id": "",
+      "name": "Joey Cold Cuts",
+      "handle": "@joeycoldcuts"
+    },
+    {
+      "id": "UCXQKmaMUPGqTqOzZJY-lT3A",
+      "name": "Jack Perez",
+      "handle": "@fatperez"
+    },
+    {
+      "id": "",
+      "name": "Bobby Fairways",
+      "handle": "@bobbyfairways"
+    },
+    {
+      "id": "UCdCxaD8rWfAj12rloIYS6jQ",
+      "name": "Bryan Bros Golf",
+      "handle": "@georgebryan"
+    },
+    {
+      "id": "UC9iCL5yoIZmeJkdwb5htV5Q",
+      "name": "Paige Spiranac",
+      "handle": "@paigespiranac"
+    },
+    {
+      "id": "UCHs_XdW23ArpXSfYUiscoRA",
+      "name": "Golf Monthly",
+      "handle": "@golfmonthly"
+    },
+    {
+      "id": "UCXTCMKXHFCwptU5A5HOqxNg",
+      "name": "Josh Kelley Golf", 
+      "handle": "@joshkelleygolf"
+    },
+    {
+      "id": "UCkMOtD7MMYs1H55XH6CkWEw",
+      "name": "Golf Digest",
+      "handle": "@golfdigest"
+    },
+    {
+      "id": "UCZn1UAWT9W0pLTWCdt8CTBg",
+      "name": "No Laying Up",
+      "handle": "@nolayingup"
+    },
+    {
+      "id": "UCLpyfBtmj6hxmrMWhXQi6RA",
+      "name": "FULL SEND GOLF",
+      "handle": "@fullsendgolf"
+    },
+    {
+      "id": "UCpMl4nfWUiYKdq8Il8ZICPQ",
+      "name": "Taco Golf",
+      "handle": "@tacogolf"
+    },
+    {
+      "id": "UCE3jCX0g7xE5MS5c_mw",
+      "name": "Kyle Berkshire",
+      "handle": "@kyleberkshire"
+    },
+    {
+      "id": "UC7m4k9X2pRxuvzpwSz5jWgQ",
+      "name": "Brooks Holt",
+      "handle": "@brooksholt"
+    }
+  ]
+}

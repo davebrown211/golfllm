@@ -21,6 +21,7 @@ import schedule
 import json
 from dataclasses import dataclass
 from dotenv import load_dotenv
+from golf_whitelist import WHITELISTED_CHANNELS
 
 # Local imports
 from youtube_client import YouTubeClient
@@ -147,42 +148,8 @@ class GolfScheduler:
         self.daily_quota_limit = 10000
         self.quota_reserve_percentage = 0.2  # Reserve 20% for essential operations
         
-        # Whitelisted channel IDs (from Next.js content-whitelist.ts)
-        self.whitelisted_channels = [
-            # VALIDATED CHANNELS IN DATABASE
-            "UCfi-mPMOmche6WI-jkvnGXw",  # Good Good (main)
-            "UCbY_v56iMzSGvXK79X6f4dw",  # Good Good Extra
-            "UCqr4sONkmFEOPc3rfoVLEvg",  # Bob Does Sports
-            "UCgUueMmSpcl-aCTt5CuCKQw",  # Grant Horvat Golf
-            "UCJcc1x6emfrQquiV8Oe_pug",  # Luke Kwon Golf
-            "UCsazhBmAVDUL_WYcARQEFQA",  # The Lads
-            "UC3jFoA7_6BTV90hsRSVHoaw",  # Phil Mickelson and the HyFlyers
-            "UCfdYeBYjouhibG64ep_m4Vw",  # Micah Morris
-            "UCjchle1bmH0acutqK15_XSA",  # Brad Dalke
-            "UCdCxaD8rWfAj12rloIYS6jQ",  # Bryan Bros Golf
-            "UCB0NRdlQ6fBYQX8W8bQyoDA",  # MyTPI
-            "UCyy8ULLDGSm16_EkXdIt4Gw",  # Titleist
-            "UClJO9jvaU5mvNuP-XTbhHGw",  # TaylorMade Golf
-            # POPULAR GOLF CREATORS
-            "UCFHZHhZaH7Rc_FOMIzUziJA",  # Rick Shiels Golf
-            "UCFoez1Xjc90CsHvCzqKnLcw",  # Peter Finch Golf
-            "UCCxF55adGXOscJ3L8qdKnrQ",  # Bryson DeChambeau
-            "UCZelGnfKLXic4gDP63dIRxw",  # Mark Crossfield
-            "UCaeGjmOiTxekbGUDPKhoU-A",  # Golf Sidekick
-            "UCtNpbO2MtsVY4qW23WfnxGg",  # James Robinson Golf
-            "UCUOqlmPAo8h4pVQ4cuRECUg",  # Big Wedge Golf
-            "UClljAz6ZKy0XeViKsohdjqA",  # GM Golf
-            "UCSwdmDQhAi_-ICkAvNBLEBw",  # Danny Maude
-            "UCJolpQHWLAW6cCUYGgean8w",  # Padraig Harrington
-            "UCuXIBwKQeH9cnLOv7w66cJg",  # MrShortGame Golf
-            "UCXvDkP2X3aE9yrPavNMJv0A",  # JnA Golf
-            "UCamOYT0c_pSrSCu9c8CyEcg",  # Bryan Bros TV
-            "UCrgGz4gZxWu77Nw5RXcxlRg",  # Josh Mayer
-            "UCCry5X3Phfmz0UzqRNm0BPA",  # Golf Girl Games
-            "UCwMgdK0S57nEdN_RGaajwOQ",  # GOLF LIFE
-            "UCw3LGiL_bYbWrgpQ7w7QZrw",  # Fore Play Golf (Barstool Sports)
-            "UC9bPOeQN6J2Rh69jFaOhf3Q",  # Tommy Fleetwood Golf
-        ]
+        # Import whitelisted channels from centralized file and normalize to IDs
+        self.whitelisted_channels = self.youtube_client.normalize_channel_list(WHITELISTED_CHANNELS)
         
         logger.info("Golf Scheduler initialized")
     
@@ -513,8 +480,17 @@ class GolfScheduler:
                             video_ids = [v['id'] for v in channel_videos]
                             detailed_videos = self.youtube_client.update_video_stats(video_ids)
                             
-                            # Upsert videos to database
+                            # Get channel info for any new channels
+                            channel_ids = list(set([v['channel_id'] for v in detailed_videos]))
+                            channels = self.youtube_client.get_channel_info(channel_ids)
+                            
+                            # Upsert channels and videos to database
                             with self.db_manager.get_connection() as conn:
+                                # First upsert channels (prevents foreign key errors)
+                                for channel_data in channels:
+                                    self.db_manager.upsert_channel(conn, channel_data)
+                                
+                                # Then upsert videos
                                 for video in detailed_videos:
                                     self.db_manager.upsert_video(conn, video)
                                     collected_count += 1

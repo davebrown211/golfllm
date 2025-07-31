@@ -8,6 +8,10 @@ export default function VideoOfTheDayComponent() {
   const [video, setVideo] = useState<VideoOfTheDay | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [audioUrl, setAudioUrl] = useState<string | null>(null)
+  const [summary, setSummary] = useState<string | null>(null)
+  const [summaryLoading, setSummaryLoading] = useState(false)
+  const [audioLoading, setAudioLoading] = useState(false)
 
   useEffect(() => {
     loadVideoOfTheDay()
@@ -177,19 +181,91 @@ export default function VideoOfTheDayComponent() {
   }
 
   return (
-    <div className="mb-16">
+    <div className="mb-8 md:mb-16">
       {/* Trending Now Indicator */}
-      <div className="mb-6">
-        <p className="text-purple-300">🔥 Trending now • {getDaysAgoText(video.days_ago)}</p>
+      <div className="mb-4 md:mb-6">
+        <p className="text-purple-300 text-sm md:text-base">🔥 Trending now • {getDaysAgoText(video.days_ago)}</p>
       </div>
 
-      {/* Main Video Card */}
-      <div className="bg-gradient-to-r from-purple-900 via-purple-800 to-indigo-900 rounded-3xl p-8 shadow-2xl border border-purple-500/20">
-        <div className="grid lg:grid-cols-2 gap-8 items-center">
-          
+      {/* Desktop Layout */}
+      <div className="hidden md:block">
+        <div className="bg-gradient-to-r from-purple-900 via-purple-800 to-indigo-900 rounded-3xl p-8 shadow-2xl border border-purple-500/20">
+          <div className="grid lg:grid-cols-2 gap-8 items-center">
+            
+            {/* Video Thumbnail */}
+            <div className="relative group cursor-pointer" onClick={() => window.open(video.url, '_blank')}>
+              <div className="aspect-video rounded-xl overflow-hidden bg-gray-800 group-hover:scale-[1.02] transition-transform duration-300">
+                <img
+                  src={video.thumbnail || 'https://via.placeholder.com/640x360/1a1a1a/666666?text=No+Thumbnail'}
+                  alt={video.title}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.src = 'https://via.placeholder.com/640x360/1a1a1a/666666?text=No+Thumbnail';
+                  }}
+                />
+                
+                {/* Play Button Overlay */}
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 bg-black/30">
+                  <div className="w-20 h-20 bg-white/90 rounded-full flex items-center justify-center shadow-lg">
+                    <Play className="w-10 h-10 text-gray-900 ml-1" fill="currentColor" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Video Info */}
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-2xl font-bold text-white leading-tight mb-3 line-clamp-3">
+                  {video.title}
+                </h3>
+                <p className="text-purple-200 text-lg font-medium">{video.channel}</p>
+                
+                {/* View count */}
+                <div className="flex items-center space-x-2 mt-3">
+                  <Eye className="w-5 h-5 text-blue-400" />
+                  <span className="text-blue-300 font-medium">{formatViews(video.views)} views</span>
+                </div>
+              </div>
+
+              {/* Show audio player if available, otherwise show nothing */}
+              {audioUrl && (
+                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6">
+                  <div className="flex items-center justify-between">
+                    <p className="text-white font-medium">Audio Recap</p>
+                    
+                    <audio
+                      controls
+                      className="h-8"
+                      preload="metadata"
+                    >
+                      <source src={audioUrl} type="audio/mpeg" />
+                      Your browser does not support the audio element.
+                    </audio>
+                  </div>
+                </div>
+              )}
+
+              {/* Watch Button */}
+              <button
+                onClick={() => window.open(video.url, '_blank')}
+                className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg"
+              >
+                <Play className="w-6 h-6" fill="currentColor" />
+                <span>Watch on YouTube</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile Layout - Simplified */}
+      <div className="md:hidden">
+        <div className="bg-gray-900/80 backdrop-blur-sm rounded-2xl overflow-hidden shadow-lg border border-gray-700">
           {/* Video Thumbnail */}
-          <div className="relative group cursor-pointer" onClick={() => window.open(video.url, '_blank')}>
-            <div className="aspect-video rounded-xl overflow-hidden bg-gray-800 group-hover:scale-[1.02] transition-transform duration-300">
+          <div className="relative cursor-pointer" onClick={() => window.open(video.url, '_blank')}>
+            <div className="aspect-video bg-gray-800">
               <img
                 src={video.thumbnail || 'https://via.placeholder.com/640x360/1a1a1a/666666?text=No+Thumbnail'}
                 alt={video.title}
@@ -200,57 +276,44 @@ export default function VideoOfTheDayComponent() {
                 }}
               />
               
-              {/* Play Button Overlay */}
-              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 bg-black/30">
-                <div className="w-20 h-20 bg-white/90 rounded-full flex items-center justify-center shadow-lg">
-                  <Play className="w-10 h-10 text-gray-900 ml-1" fill="currentColor" />
+              {/* Play Button Overlay - Always visible on mobile */}
+              <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                <div className="w-16 h-16 bg-white/90 rounded-full flex items-center justify-center shadow-lg">
+                  <Play className="w-8 h-8 text-gray-900 ml-1" fill="currentColor" />
                 </div>
               </div>
-
             </div>
           </div>
 
           {/* Video Info */}
-          <div className="space-y-6">
-            <div>
-              <h3 className="text-2xl font-bold text-white leading-tight mb-3 line-clamp-3">
-                {video.title}
-              </h3>
-              <p className="text-purple-200 text-lg font-medium">{video.channel}</p>
-              
-              {/* View count */}
-              <div className="flex items-center space-x-2 mt-3">
-                <Eye className="w-5 h-5 text-blue-400" />
-                <span className="text-blue-300 font-medium">{formatViews(video.views)} views</span>
+          <div className="p-4 space-y-3">
+            <h3 className="text-lg font-bold text-white leading-tight line-clamp-2">
+              {video.title}
+            </h3>
+            
+            <div className="flex items-center justify-between text-sm">
+              <p className="text-gray-300 font-medium">{video.channel}</p>
+              <div className="flex items-center space-x-1">
+                <Eye className="w-4 h-4 text-blue-400" />
+                <span className="text-blue-300">{formatViews(video.views)}</span>
               </div>
             </div>
 
-            {/* Show audio player if available, otherwise show nothing */}
+            {/* Audio player for mobile */}
             {audioUrl && (
-              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6">
+              <div className="bg-white/5 rounded-lg p-3">
                 <div className="flex items-center justify-between">
-                  <p className="text-white font-medium">Audio Recap</p>
-                  
+                  <p className="text-white text-sm font-medium">Audio Recap</p>
                   <audio
                     controls
-                    className="h-8"
+                    className="h-6 text-xs"
                     preload="metadata"
                   >
                     <source src={audioUrl} type="audio/mpeg" />
-                    Your browser does not support the audio element.
                   </audio>
                 </div>
               </div>
             )}
-
-            {/* Watch Button */}
-            <button
-              onClick={() => window.open(video.url, '_blank')}
-              className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg"
-            >
-              <Play className="w-6 h-6" fill="currentColor" />
-              <span>Watch on YouTube</span>
-            </button>
           </div>
         </div>
       </div>

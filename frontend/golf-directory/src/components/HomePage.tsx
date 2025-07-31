@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { Play, ChevronLeft, ChevronRight, Clock, RefreshCw } from "lucide-react";
 import { api } from "@/lib/api";
-import { useStatsUpdates } from "@/hooks/useWebSocket";
 import VideoOfTheDayCarouselMouse from "./VideoOfTheDayCarouselMouse";
 
 interface VideoRanking {
@@ -69,8 +68,8 @@ function VideoCard({ video, index }: VideoCardProps) {
         animation: "fadeInUp 0.6s ease-out forwards",
       }}
     >
-      {/* Video Thumbnail */}
-      <div className="relative aspect-video rounded-xl overflow-hidden bg-gray-800 mb-3 group-hover:scale-[1.02] transition-transform duration-300">
+      {/* Video Thumbnail - Mobile Optimized */}
+      <div className="relative aspect-video rounded-xl overflow-hidden bg-gray-800 mb-3 group-hover:scale-[1.02] transition-transform duration-300 touch-manipulation">
         <img
           src={
             video.thumbnail ||
@@ -78,6 +77,9 @@ function VideoCard({ video, index }: VideoCardProps) {
           }
           alt={video.title}
           className="w-full h-full object-cover"
+          loading="lazy"
+          decoding="async"
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           onError={(e) => {
             const target = e.target as HTMLImageElement;
             target.src =
@@ -85,14 +87,14 @@ function VideoCard({ video, index }: VideoCardProps) {
           }}
         />
 
-        {/* Play Button Overlay */}
-        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 bg-black/20">
-          <div className="w-16 h-16 bg-white/90 rounded-full flex items-center justify-center shadow-lg">
-            <Play className="w-7 h-7 text-gray-900 ml-1" fill="currentColor" />
+        {/* Play Button Overlay - Responsive sizing */}
+        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 md:group-hover:opacity-100 active:opacity-100 transition-all duration-300 bg-black/20">
+          <div className="w-12 h-12 md:w-16 md:h-16 bg-white/90 rounded-full flex items-center justify-center shadow-lg">
+            <Play className="w-5 h-5 md:w-7 md:h-7 text-gray-900 ml-1" fill="currentColor" />
           </div>
         </div>
 
-        {/* Duration Badge */}
+        {/* Duration Badge - Mobile optimized */}
         <div className="absolute bottom-2 right-2">
           <div className="px-2 py-1 bg-black/70 backdrop-blur-sm rounded text-white text-xs font-medium">
             {getDaysAgo(video.published)}
@@ -111,16 +113,16 @@ function VideoCard({ video, index }: VideoCardProps) {
 
       {/* Video Info - Below thumbnail like YouTube */}
       <div className="px-1">
-        <h3 className="font-semibold text-white text-sm leading-tight mb-2 line-clamp-2 group-hover:text-blue-300 transition-colors duration-300">
+        <h3 className="font-semibold text-white text-sm md:text-sm leading-tight mb-2 line-clamp-2 group-hover:text-blue-300 transition-colors duration-300">
           {video.title}
         </h3>
 
-        <p className="text-gray-400 text-sm mb-1">{video.channel}</p>
+        <p className="text-gray-400 text-sm mb-1 truncate">{video.channel}</p>
 
         <div className="flex items-center text-gray-500 text-xs space-x-2">
-          <span>{formatViews(video.views)} views</span>
-          <span>•</span>
-          <span>{video.engagement} engagement</span>
+          <span className="truncate">{formatViews(video.views)} views</span>
+          <span className="hidden sm:inline">•</span>
+          <span className="hidden sm:inline truncate">{video.engagement} engagement</span>
         </div>
       </div>
     </div>
@@ -138,6 +140,7 @@ interface CategorySectionProps {
   currentPage?: number;
   sectionKey: string;
   refreshAnimating: string | null;
+  isMobile: boolean;
 }
 
 function CategorySection({
@@ -151,59 +154,70 @@ function CategorySection({
   currentPage = 0,
   sectionKey,
   refreshAnimating,
+  isMobile,
 }: CategorySectionProps) {
   return (
     <div className="mb-16">
       {/* Section Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-white tracking-tight">
+          <h2 className="text-xl md:text-2xl font-bold text-white tracking-tight">
             {title}
           </h2>
         </div>
 
-        <div className="flex items-center space-x-2">
+        {/* Mobile Navigation Controls - Larger touch targets */}
+        <div className="flex items-center space-x-1 md:space-x-2">
           <button
             onClick={onPrevious}
             disabled={!canGoPrevious || isLoading}
-            className={`p-2 bg-white/10 hover:bg-white/20 rounded-lg transition-all duration-300 backdrop-blur-sm ${
-              !canGoPrevious ? "opacity-50 cursor-not-allowed" : "hover:scale-110"
+            className={`min-w-[44px] min-h-[44px] p-3 md:p-2 bg-white/10 hover:bg-white/20 rounded-lg transition-all duration-300 backdrop-blur-sm touch-manipulation ${
+              !canGoPrevious ? "opacity-50 cursor-not-allowed" : "hover:scale-110 active:scale-95"
             }`}
             title="Previous videos"
+            aria-label="Show previous videos"
           >
-            <ChevronLeft className="w-5 h-5 text-white" />
+            <ChevronLeft className="w-5 h-5 md:w-5 md:h-5 text-white" />
           </button>
 
-          <span className="text-white/60 text-sm px-2">
-            Page {currentPage + 1}
+          <span className="text-white/60 text-xs md:text-sm px-1 md:px-2">
+            {currentPage + 1}
           </span>
 
           <button
             onClick={onNext}
             disabled={isLoading}
-            className={`p-2 bg-white/10 hover:bg-white/20 rounded-lg transition-all duration-300 backdrop-blur-sm hover:scale-110`}
+            className={`min-w-[44px] min-h-[44px] p-3 md:p-2 bg-white/10 hover:bg-white/20 rounded-lg transition-all duration-300 backdrop-blur-sm hover:scale-110 active:scale-95 touch-manipulation`}
             title="Next videos"
+            aria-label="Show next videos"
           >
-            <ChevronRight className="w-5 h-5 text-white" />
+            <ChevronRight className="w-5 h-5 md:w-5 md:h-5 text-white" />
           </button>
 
           <button
             onClick={onReset}
             disabled={currentPage === 0 || refreshAnimating === sectionKey}
-            className={`p-2 bg-white/10 hover:bg-white/20 rounded-lg transition-all duration-300 backdrop-blur-sm ${
-              currentPage === 0 || refreshAnimating === sectionKey ? "opacity-50 cursor-not-allowed" : "hover:scale-110"
+            className={`min-w-[44px] min-h-[44px] p-3 md:p-2 bg-white/10 hover:bg-white/20 rounded-lg transition-all duration-300 backdrop-blur-sm touch-manipulation ${
+              currentPage === 0 || refreshAnimating === sectionKey ? "opacity-50 cursor-not-allowed" : "hover:scale-110 active:scale-95"
             }`}
             title="Return to first page"
+            aria-label="Return to first page of videos"
           >
-            <RefreshCw className={`w-4 h-4 text-white ${refreshAnimating === sectionKey ? "refresh-spinning" : ""}`} />
+            <RefreshCw className={`w-4 h-4 md:w-4 md:h-4 text-white ${refreshAnimating === sectionKey ? "refresh-spinning" : ""}`} />
           </button>
         </div>
       </div>
 
-      {/* Video Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* Video Grid - Mobile: 1 video, Desktop: 3 videos */}
+      <div 
+        className="gap-6"
+        style={{
+          display: 'grid',
+          gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)'
+        }}
+      >
         {videos.length > 0 ? (
-          videos.map((video, index) => (
+          (isMobile ? videos.slice(0, 1) : videos).map((video, index) => (
             <VideoCard
               key={`${title}-${video.url}-${index}`}
               video={video}
@@ -237,6 +251,7 @@ export default function HomePage() {
   const [curatedOffset, setCuratedOffset] = useState(0);
   const [discoveryOffset, setDiscoveryOffset] = useState(0);
   const [refreshAnimating, setRefreshAnimating] = useState<string | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
 
   // Debug state changes (can be removed in production)
   useEffect(() => {
@@ -251,19 +266,16 @@ export default function HomePage() {
     );
   }, [discoveryVideos]);
 
-  // WebSocket hooks for real-time updates
-  const { stats: liveStats } = useStatsUpdates();
-  const wsConnected = false; // WebSocket connection status (disabled for now)
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 1024);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   useEffect(() => {
     loadAllData();
   }, []);
-
-  useEffect(() => {
-    if (liveStats && liveStats.total_videos) {
-      setStats(liveStats);
-    }
-  }, [liveStats]);
 
   const loadAllData = async () => {
     try {
@@ -446,27 +458,27 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900">
 
-      {/* Stats Bar */}
+      {/* Stats Bar - Mobile Optimized */}
       {stats && (
         <div className="border-b border-white/10 bg-black/30 backdrop-blur-sm">
-          <div className="max-w-7xl mx-auto px-6 py-4">
-            <div className="flex items-center justify-between text-white">
-              <div className="flex items-center justify-center space-x-8 flex-1">
-                <div className="flex items-center space-x-2">
-                  <Play className="w-4 h-4 text-blue-400" />
-                  <span className="font-bold">
+          <div className="max-w-7xl mx-auto px-4 md:px-6 py-3 md:py-4">
+            <div className="flex items-center justify-between text-white text-sm md:text-base">
+              <div className="flex items-center space-x-4 md:space-x-8 flex-1">
+                <div className="flex items-center space-x-1 md:space-x-2">
+                  <Play className="w-3 h-3 md:w-4 md:h-4 text-blue-400" />
+                  <span className="font-bold text-xs md:text-base">
                     {stats.total_videos.toLocaleString()}
                   </span>
-                  <span className="text-gray-400">videos</span>
+                  <span className="text-gray-400 text-xs md:text-base hidden sm:inline">videos</span>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <Clock className="w-4 h-4 text-green-400" />
-                  <span className="font-bold">
+                <div className="flex items-center space-x-1 md:space-x-2">
+                  <Clock className="w-3 h-3 md:w-4 md:h-4 text-green-400" />
+                  <span className="font-bold text-xs md:text-base">
                     {stats.total_channels.toLocaleString()}
                   </span>
-                  <span className="text-gray-400">channels</span>
+                  <span className="text-gray-400 text-xs md:text-base hidden sm:inline">channels</span>
                 </div>
-                <div className="flex items-center space-x-2">
+                <div className="hidden md:flex items-center space-x-2">
                   <span className="text-gray-400">Updated</span>
                   <span className="font-bold">
                     {new Date(stats.last_updated).toLocaleTimeString()}
@@ -474,8 +486,8 @@ export default function HomePage() {
                 </div>
               </div>
 
-              {/* Shorts Toggle */}
-              <div className="flex items-center space-x-3">
+              {/* Shorts Toggle - Hidden on mobile for space */}
+              <div className="hidden md:flex items-center space-x-3">
                 <span className="text-gray-400 text-sm">
                   {includeShorts ? "Shorts" : "Long-form"}
                 </span>
@@ -498,7 +510,7 @@ export default function HomePage() {
       )}
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-6 py-12">
+      <div className="max-w-7xl mx-auto px-4 md:px-6 py-8 md:py-12">
         {/* Video of the Day */}
         <VideoOfTheDayCarouselMouse />
 
@@ -514,6 +526,7 @@ export default function HomePage() {
           currentPage={Math.floor(curatedOffset / 3)}
           sectionKey="curated"
           refreshAnimating={refreshAnimating}
+          isMobile={isMobile}
         />
 
         {/* Discovery Content */}
@@ -528,6 +541,7 @@ export default function HomePage() {
           currentPage={Math.floor(discoveryOffset / 3)}
           sectionKey="discovery"
           refreshAnimating={refreshAnimating}
+          isMobile={isMobile}
         />
       </div>
 

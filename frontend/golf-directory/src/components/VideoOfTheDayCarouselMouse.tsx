@@ -145,9 +145,9 @@ export default function VideoOfTheDayCarouselMouse() {
   }
 
   return (
-    <div className="mb-16">
-      {/* Carousel Container */}
-      <div ref={containerRef} className="relative h-[500px] overflow-hidden">
+    <div className="mb-8 md:mb-16">
+      {/* Desktop Carousel */}
+      <div ref={containerRef} className="hidden md:block relative h-[500px] overflow-hidden">
         {/* Videos Track */}
         <div className="absolute inset-0 flex items-center justify-center">
           {videos.map((video, index) => {
@@ -314,6 +314,84 @@ export default function VideoOfTheDayCarouselMouse() {
             />
           </div>
         </div>
+      </div>
+
+      {/* Mobile Version - Simple Card */}
+      <div className="md:hidden">
+        {videos.length > 0 && (
+          <div className="bg-gray-900/80 backdrop-blur-sm rounded-2xl overflow-hidden shadow-lg border border-gray-700">
+            {/* Use the first video (video of the day) for mobile */}
+            {(() => {
+              const video = videos[0];
+              return (
+                <>
+                  {/* Video Thumbnail */}
+                  <div 
+                    className="relative cursor-pointer" 
+                    onClick={() => window.open(video.url, '_blank')}
+                  >
+                    <div className="aspect-video bg-gray-800">
+                      <img
+                        src={video.thumbnail || 'https://via.placeholder.com/640x360/1a1a1a/666666?text=No+Thumbnail'}
+                        alt={video.title}
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = 'https://via.placeholder.com/640x360/1a1a1a/666666?text=No+Thumbnail';
+                        }}
+                      />
+                      
+                      {/* Play Button Overlay - Always visible on mobile */}
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                        <div className="w-16 h-16 bg-white/90 rounded-full flex items-center justify-center shadow-lg">
+                          <Play className="w-8 h-8 text-gray-900 ml-1" fill="currentColor" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Video Info */}
+                  <div className="p-4 space-y-3">
+                    <div>
+                      <p className="text-purple-300 text-xs mb-2">
+                        🔥 {video.is_video_of_day ? "Video of the Day" : "Featured Video"} • {getDaysAgoText(video.days_ago)}
+                      </p>
+                      <h3 className="text-lg font-bold text-white leading-tight line-clamp-2">
+                        {video.title}
+                      </h3>
+                    </div>
+                    
+                    <div className="flex items-center justify-between text-sm">
+                      <p className="text-gray-300 font-medium truncate">{video.channel}</p>
+                      <div className="flex items-center space-x-1">
+                        <Eye className="w-4 h-4 text-blue-400" />
+                        <span className="text-blue-300">{formatViews(video.views)}</span>
+                      </div>
+                    </div>
+
+                    {/* Audio player for mobile */}
+                    {video.audio_url && (
+                      <div className="bg-white/5 rounded-lg p-3">
+                        <div className="flex items-center justify-between">
+                          <p className="text-white text-sm font-medium">AI Preview</p>
+                          <audio
+                            controls
+                            className="h-6 scale-90"
+                            preload="metadata"
+                          >
+                            <source src={video.audio_url} type="audio/mpeg" />
+                            Your browser does not support the audio element.
+                          </audio>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </>
+              );
+            })()}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -259,7 +259,7 @@ async function generateGeminiSummary(transcript: string, videoDetails?: any): Pr
       throw new Error('GOOGLE_API_KEY not configured')
     }
 
-    const prompt = `You are channeling a legendary golf announcer. Analyze this golf video transcript and create a compelling TRAILER-STYLE preview in a distinctive broadcasting style.
+    const prompt = `You are "The Professor" - a golf commentator who blends Jim Nantz's elegance, Colt Knost's tour insight, and Kevin Kisner's everyman appeal. Create a compelling TRAILER-STYLE preview for this golf video.
 
 Video Details:
 ${videoDetails ? `Title: "${videoDetails.title}"` : ''}
@@ -268,23 +268,25 @@ ${videoDetails ? `Channel: ${videoDetails.channel_name}` : ''}
 Transcript:
 ${transcript}
 
-Create a TRAILER-STYLE preview (NOT a full recap) in a signature broadcasting style:
-- Build anticipation and excitement without revealing outcomes or spoilers
-- Focus on what viewers WILL SEE, not what happens
-- Tease key moments, players, or situations without giving away results
-- Use phrases like "Ladies and gentlemen," "Coming up," "You'll witness," "Hello friends"
-- Poetic, measured cadence that creates anticipation
+Your Personality:
+- Sophisticated yet approachable (Jim's warmth + Kisner's relatability)
+- Tour-level golf knowledge (Colt's insider perspective)
+- Subtle humor without being goofy (Kisner's wit + Jim's class)
+- The voice of someone who's "been there" but speaks to all golfers
+
+Create a TRAILER-STYLE preview (NOT a full recap):
+- Build anticipation without revealing outcomes or spoilers
+- Focus on what viewers WILL SEE, not what happened
+- Use phrases like "Coming up," "You'll witness," "Here's what awaits"
 - MAXIMUM 60-75 words (30 seconds of speaking time)
-- Think movie trailer energy with Jim's elegant golf sensibility
 - End with intrigue that makes people want to watch
+- Blend reverence for the game with accessible commentary
 
-Examples of trailer language:
-- "Coming up, witness..." 
-- "You'll see remarkable..." 
-- "Get ready for..." 
-- "An unforgettable moment awaits..."
+Think: Jim Nantz introducing a moment, but with the insight of a former tour player and the humor of your weekend foursome's best storyteller.
 
-NO SPOILERS. Build excitement for what's TO COME, not what happened.`
+NO SPOILERS. Build excitement for what's TO COME, not what happened.
+
+IMPORTANT: Write directly in the commentator's voice. Do NOT include tone descriptions, voice directions, or parenthetical instructions like "(warm tone)" or "[excited voice]" - just write the actual words that should be spoken.`
 
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${GOOGLE_API_KEY}`, {
       method: 'POST',
@@ -358,8 +360,8 @@ async function generateAudioNarration(text: string, videoId: string): Promise<st
       .replace(/\*/g, '')   // Remove italic markdown
       .trim()
     
-    // Use Grandpa Spuds Oxley voice
-    const voiceId = 'NOpBlnGInO9m6vDvFkFC' // Grandpa Spuds Oxley voice ID
+    // Use Eric voice (smooth tenor, man in his 40s - perfect for golf commentary)
+    const voiceId = 'cjVigY5qzO86Huf0OWal' // Eric voice ID
     
     // ElevenLabs TTS API call
     const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {

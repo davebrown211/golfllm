@@ -99,11 +99,14 @@ async function generateJimNantzAudio(text: string, videoId: string): Promise<str
       throw new Error('TOPMEDIAI_API_KEY not configured')
     }
     
-    // Clean the text for audio generation (remove markdown formatting)
+    // Clean the text for audio generation (remove markdown formatting and tone instructions)
     const cleanText = text
       .replace(/\[AI-generated from video transcript\]/g, '')
       .replace(/\*\*/g, '') // Remove bold markdown
       .replace(/\*/g, '')   // Remove italic markdown
+      .replace(/\[.*?\]/g, '') // Remove tone/emotion instructions in brackets
+      .replace(/\(.*?\)/g, '') // Remove tone/emotion instructions in parentheses  
+      .replace(/^[,.\s]+|[,.\s]+$/g, '') // Remove leading/trailing punctuation
       .trim()
     
     // TopMediai TTS API call
