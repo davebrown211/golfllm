@@ -3,7 +3,8 @@
     {
       "id": "UCfi-mPMOmche6WI-jkvnGXw",
       "name": "Good Good",
-      "handle": "@goodgood"
+      "handle": "@goodgood",
+      "x_handle": "@goodgood_golf"
     },
     {
       "id": "UCbY_v56iMzSGvXK79X6f4dw", 
@@ -13,17 +14,20 @@
     {
       "id": "UCqr4sONkmFEOPc3rfoVLEvg",
       "name": "Bob Does Sports", 
-      "handle": "@bobdoessports"
+      "handle": "@bobdoessports",
+      "x_handle": "@bobdoessports"
     },
     {
       "id": "UCgUueMmSpcl-aCTt5CuCKQw",
       "name": "Grant Horvat Golf",
-      "handle": "@granthorvatgolfs"
+      "handle": "@granthorvatgolfs",
+      "x_handle": "@GrantHorvatGolf"
     },
     {
       "id": "UCJcc1x6emfrQquiV8Oe_pug",
       "name": "Luke Kwon Golf",
-      "handle": "@lukekwongolf"
+      "handle": "@lukekwongolf",
+      "x_handle": "@lkwongolf"
     },
     {
       "id": "UCsazhBmAVDUL_WYcARQEFQA",
@@ -33,7 +37,8 @@
     {
       "id": "UC3jFoA7_6BTV90hsRSVHoaw",
       "name": "Phil Mickelson and the HyFlyers",
-      "handle": "@philmickelsonhyflyers"
+      "handle": "@philmickelsonhyflyers",
+      "x_handle": "@PhilMickelson"
     },
     {
       "id": "UCfdYeBYjouhibG64ep_m4Vw",
@@ -68,7 +73,8 @@
     {
       "id": "UCFHZHhZaH7Rc_FOMIzUziJA",
       "name": "Rick Shiels Golf",
-      "handle": "@rickshielsgolf"
+      "handle": "@rickshielsgolf",
+      "x_handle": "@RickShielsPGA"
     },
     {
       "id": "UCFoez1Xjc90CsHvCzqKnLcw",
@@ -78,7 +84,8 @@
     {
       "id": "UCCxF55adGXOscJ3L8qdKnrQ",
       "name": "Bryson DeChambeau",
-      "handle": "@brysondechambeau"
+      "handle": "@brysondechambeau",
+      "x_handle": "@b_dechambeau"
     },
     {
       "id": "UCZelGnfKLXic4gDP63dIRxw",
@@ -148,7 +155,8 @@
     {
       "id": "UCw3LGiL_bYbWrgpQ7w7QZrw",
       "name": "Fore Play Golf",
-      "handle": "@foreplaygolf"
+      "handle": "@foreplaygolf",
+      "x_handle": "@ForePlayPod"
     },
     {
       "id": "UC9bPOeQN6J2Rh69jFaOhf3Q",
@@ -213,7 +221,8 @@
     {
       "id": "UC9iCL5yoIZmeJkdwb5htV5Q",
       "name": "Paige Spiranac",
-      "handle": "@paigespiranac"
+      "handle": "@paigespiranac",
+      "x_handle": "@PaigeSpiranac"
     },
     {
       "id": "UCHs_XdW23ArpXSfYUiscoRA",
@@ -233,7 +242,8 @@
     {
       "id": "UCZn1UAWT9W0pLTWCdt8CTBg",
       "name": "No Laying Up",
-      "handle": "@nolayingup"
+      "handle": "@nolayingup",
+      "x_handle": "@NoLayingUp"
     },
     {
       "id": "UCLpyfBtmj6hxmrMWhXQi6RA",
