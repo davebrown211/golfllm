@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState } from 'react'
 import { Play, Eye, ChevronLeft, ChevronRight } from 'lucide-react'
 import { api } from '@/lib/api'
 import { VideoStructuredData } from './StructuredData'
@@ -23,50 +23,45 @@ interface VideoWithAudio {
   is_video_of_day: boolean
 }
 
-export default function VideoOfTheDayCarousel() {
-  const [videos, setVideos] = useState<VideoWithAudio[]>([])
-  const [currentIndex, setCurrentIndex] = useState(0)
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+interface VideoOfTheDayCarouselProps {
+  initialVideosWithAudio?: any[]
+  initialVideoOfTheDay?: any
+}
 
-  useEffect(() => {
-    loadVideosWithAudio()
-  }, [])
+export default function VideoOfTheDayCarousel({
+  initialVideosWithAudio = [],
+  initialVideoOfTheDay = null
+}: VideoOfTheDayCarouselProps = {}) {
+  // Initialize videos from server-side data
+  const initialVideos = (() => {
+    const data = { videos: initialVideosWithAudio }
+    
+    // Check if VOD is already in our list
+    const hasVod = data.videos.some((v: VideoWithAudio) => v.video_id === initialVideoOfTheDay?.video_id)
 
-  const loadVideosWithAudio = async () => {
-    try {
-      setIsLoading(true)
-      setError(null)
-      
-      const response = await fetch('/api/videos-with-audio')
-      if (!response.ok) throw new Error('Failed to load videos')
-      
-      const data = await response.json()
-      
-      // Also get the current video of the day if it doesn't have audio
-      const vodResponse = await api.getVideoOfTheDay()
-      
-      // Check if VOD is already in our list
-      const hasVod = data.videos.some((v: VideoWithAudio) => v.video_id === vodResponse.video_id)
-      
-      if (!hasVod && vodResponse) {
-        // Add VOD at the beginning without audio
-        data.videos.unshift({
-          ...vodResponse,
-          audio_url: null,
-          ai_summary: vodResponse.ai_summary || null,
-          is_video_of_day: true
-        })
-      }
-      
-      setVideos(data.videos)
-    } catch (err) {
-      console.error('Error loading videos:', err)
-      setError('Failed to load videos')
-    } finally {
-      setIsLoading(false)
+    if (!hasVod && initialVideoOfTheDay) {
+      // Add VOD at the beginning
+      data.videos.unshift({
+        ...initialVideoOfTheDay,
+        audio_url: initialVideoOfTheDay.audio_url || null,
+        ai_summary: initialVideoOfTheDay.ai_summary || null,
+        is_video_of_day: true
+      })
     }
-  }
+
+    // Sort videos by creation date (most recent first) but keep video of the day first
+    return [...data.videos].sort((a, b) => {
+      // Video of the day always comes first
+      if (a.is_video_of_day && !b.is_video_of_day) return -1
+      if (!a.is_video_of_day && b.is_video_of_day) return 1
+
+      // For other videos, sort by published date (newest first)
+      return new Date(b.published).getTime() - new Date(a.published).getTime()
+    })
+  })()
+
+  const [videos] = useState<VideoWithAudio[]>(initialVideos)
+  const [currentIndex, setCurrentIndex] = useState(0)
 
   const formatViews = (views: string) => {
     const num = parseInt(views.replace(/,/g, ''))
@@ -87,19 +82,7 @@ export default function VideoOfTheDayCarousel() {
     setCurrentIndex((prev) => (prev - 1 + videos.length) % videos.length)
   }
 
-  if (isLoading) {
-    return (
-      <div className="mb-16">
-        <div className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 rounded-3xl p-8">
-          <div className="animate-pulse">
-            <div className="aspect-video bg-gray-700 rounded-xl"></div>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  if (error || videos.length === 0) {
+  if (videos.length === 0) {
     return null // Don't show anything if no videos with audio
   }
 
@@ -205,7 +188,7 @@ export default function VideoOfTheDayCarousel() {
             {/* Watch Button */}
             <button
               onClick={() => window.open(video.url, '_blank')}
-              className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg"
+              className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 flex items-center justify-center space-x-3 shadow-lg text-lg"
             >
               <Play className="w-6 h-6" fill="currentColor" />
               <span>Watch on YouTube</span>
@@ -213,25 +196,6 @@ export default function VideoOfTheDayCarousel() {
           </div>
         </div>
       </div>
-
-      {/* Dots indicator */}
-      {videos.length > 1 && (
-        <div className="flex justify-center mt-6 space-x-2">
-          {videos.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => setCurrentIndex(index)}
-              className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                index === currentIndex 
-                  ? 'bg-purple-400 w-8' 
-                  : 'bg-purple-600 hover:bg-purple-500'
-              }`}
-              aria-label={`Go to video ${index + 1}`}
-            />
-          ))}
-        </div>
-      )}
     </div>
   )
 }
-

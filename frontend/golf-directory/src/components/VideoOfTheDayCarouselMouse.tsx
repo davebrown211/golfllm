@@ -22,75 +22,63 @@ interface VideoWithAudio {
   is_video_of_day: boolean;
 }
 
-export default function VideoOfTheDayCarouselMouse() {
-  const [videos, setVideos] = useState<VideoWithAudio[]>([]);
+interface VideoOfTheDayCarouselMouseProps {
+  initialVideosWithAudio?: any[];
+  initialVideoOfTheDay?: any;
+}
+
+export default function VideoOfTheDayCarouselMouse({
+  initialVideosWithAudio = [],
+  initialVideoOfTheDay = null,
+}: VideoOfTheDayCarouselMouseProps = {}) {
+  // Initialize videos from server-side data
+  const initialVideos = (() => {
+    const data = { videos: initialVideosWithAudio };
+
+    // Check if VOD is already in our list
+    const hasVod = data.videos.some(
+      (v: VideoWithAudio) => v.video_id === initialVideoOfTheDay?.video_id
+    );
+
+    if (!hasVod && initialVideoOfTheDay) {
+      // Add VOD at the beginning
+      data.videos.unshift({
+        ...initialVideoOfTheDay,
+        audio_url: initialVideoOfTheDay.audio_url || null,
+        ai_summary: initialVideoOfTheDay.ai_summary || null,
+        is_video_of_day: true,
+      });
+    }
+
+    // Sort videos by creation date (most recent first) but keep video of the day first
+    return [...data.videos].sort((a, b) => {
+      // Video of the day always comes first
+      if (a.is_video_of_day && !b.is_video_of_day) return -1;
+      if (!a.is_video_of_day && b.is_video_of_day) return 1;
+
+      // For other videos, sort by published date (newest first)
+      return new Date(b.published).getTime() - new Date(a.published).getTime();
+    });
+  })();
+
+  const [videos] = useState<VideoWithAudio[]>(initialVideos);
   const [, setCurrentIndex] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [focusedIndex, setFocusedIndex] = useState(0);
+  const [error] = useState<string | null>(null);
+  const [focusedIndex, setFocusedIndex] = useState(() => {
+    // Find the video of the day index (should be 0 after sorting)
+    const vodIndex = initialVideos.findIndex(
+      (v: VideoWithAudio) => v.is_video_of_day
+    );
+    return vodIndex !== -1 ? vodIndex : 0;
+  });
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // Set the initial current index to match focused index
   useEffect(() => {
-    loadVideosWithAudio();
-  }, []);
-
-  const loadVideosWithAudio = async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      const response = await fetch("/api/videos-with-audio");
-      if (!response.ok) throw new Error("Failed to load videos");
-
-      const data = await response.json();
-
-      // Also get the current video of the day if it doesn't have audio
-      const vodResponse = await api.getVideoOfTheDay();
-
-      // Check if VOD is already in our list
-      const hasVod = data.videos.some(
-        (v: VideoWithAudio) => v.video_id === vodResponse.video_id
-      );
-
-      if (!hasVod && vodResponse) {
-        // Add VOD at the beginning without audio
-        data.videos.unshift({
-          ...vodResponse,
-          audio_url: null,
-          ai_summary: vodResponse.ai_summary || null,
-          is_video_of_day: true,
-        });
-      }
-
-      // Sort videos by creation date (most recent first) but keep video of the day first
-      const sortedVideos = [...data.videos].sort((a, b) => {
-        // Video of the day always comes first
-        if (a.is_video_of_day && !b.is_video_of_day) return -1;
-        if (!a.is_video_of_day && b.is_video_of_day) return 1;
-
-        // For other videos, sort by published date (newest first)
-        return (
-          new Date(b.published).getTime() - new Date(a.published).getTime()
-        );
-      });
-
-      setVideos(sortedVideos);
-
-      // Find the video of the day index (should be 0 after sorting)
-      const vodIndex = sortedVideos.findIndex(
-        (v: VideoWithAudio) => v.is_video_of_day
-      );
-      const initialIndex = vodIndex !== -1 ? vodIndex : 0;
-
-      setCurrentIndex(initialIndex);
-      setFocusedIndex(initialIndex);
-    } catch (err) {
-      console.error("Error loading videos:", err);
-      setError("Failed to load videos");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    const vodIndex = videos.findIndex((v: VideoWithAudio) => v.is_video_of_day);
+    const initialIndex = vodIndex !== -1 ? vodIndex : 0;
+    setCurrentIndex(initialIndex);
+  }, [videos]);
 
   const formatViews = (views: string) => {
     const num = parseInt(views.replace(/,/g, ""));
@@ -100,7 +88,9 @@ export default function VideoOfTheDayCarouselMouse() {
   const getDaysAgoText = (daysAgo: number) => {
     if (daysAgo === 0) return "Today";
     if (daysAgo === 1) return "Yesterday";
-    return `${daysAgo}d ago`;
+    if (daysAgo <= 7) return `${daysAgo} days ago`;
+    const weeks = Math.floor(daysAgo / 7);
+    return `${weeks} week${weeks > 1 ? "s" : ""} ago`;
   };
 
   // Handle clicking on video cards to focus them
@@ -128,18 +118,6 @@ export default function VideoOfTheDayCarouselMouse() {
     setCurrentIndex(clickedIndex);
   };
 
-  if (isLoading) {
-    return (
-      <div className="mb-16">
-        <div className="bg-gradient-to-r from-purple-900 via-purple-800 to-indigo-900 rounded-3xl p-8">
-          <div className="animate-pulse">
-            <div className="aspect-video bg-purple-700 rounded-xl"></div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   if (error || videos.length === 0) {
     return null;
   }
@@ -147,9 +125,12 @@ export default function VideoOfTheDayCarouselMouse() {
   return (
     <div className="mb-8 md:mb-16">
       {/* Desktop Carousel */}
-      <div ref={containerRef} className="hidden md:block relative h-[500px] overflow-hidden">
+      <div
+        ref={containerRef}
+        className="hidden md:block relative h-[500px] overflow-hidden"
+      >
         {/* Videos Track */}
-        <div className="absolute inset-0 flex items-center justify-center">
+        <div className="flex absolute inset-0 justify-center items-center">
           {videos.map((video, index) => {
             // Calculate position and scale based on focused video
             const distance = Math.abs(index - focusedIndex);
@@ -169,7 +150,7 @@ export default function VideoOfTheDayCarouselMouse() {
             return (
               <div
                 key={video.video_id}
-                className="absolute flex items-center justify-center"
+                className="flex absolute justify-center items-center"
                 style={{
                   transform: `translateX(${position}px) scale(${scale})`,
                   opacity: opacity,
@@ -194,7 +175,7 @@ export default function VideoOfTheDayCarouselMouse() {
                 >
                   {/* Indicator */}
                   <div className="mb-4">
-                    <p className="text-purple-300 text-sm">
+                    <p className="text-sm text-purple-300">
                       🔥{" "}
                       {video.is_video_of_day
                         ? "Video of the Day"
@@ -203,22 +184,22 @@ export default function VideoOfTheDayCarouselMouse() {
                     </p>
                   </div>
 
-                  <div className="grid lg:grid-cols-2 gap-6 items-center">
+                  <div className="grid gap-6 items-center lg:grid-cols-2">
                     {/* Video Thumbnail */}
                     <div
-                      className="relative group cursor-pointer"
+                      className="relative cursor-pointer group"
                       onClick={() =>
                         isActive && window.open(video.url, "_blank")
                       }
                     >
-                      <div className="aspect-video rounded-xl overflow-hidden bg-gray-800">
+                      <div className="overflow-hidden bg-gray-800 rounded-xl aspect-video">
                         <img
                           src={
                             video.thumbnail ||
                             "https://via.placeholder.com/640x360/1a1a1a/666666?text=No+Thumbnail"
                           }
                           alt={video.title}
-                          className="w-full h-full object-cover"
+                          className="object-cover w-full h-full"
                           loading="lazy"
                           onError={(e) => {
                             const target = e.target as HTMLImageElement;
@@ -229,10 +210,10 @@ export default function VideoOfTheDayCarouselMouse() {
 
                         {/* Play Button Overlay */}
                         {isActive && (
-                          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 bg-black/30">
-                            <div className="w-16 h-16 bg-white/90 rounded-full flex items-center justify-center shadow-lg">
+                          <div className="flex absolute inset-0 justify-center items-center opacity-0 transition-all duration-300 group-hover:opacity-100 bg-black/30">
+                            <div className="flex justify-center items-center w-16 h-16 rounded-full shadow-lg bg-white/90">
                               <Play
-                                className="w-8 h-8 text-gray-900 ml-1"
+                                className="ml-1 w-8 h-8 text-gray-900"
                                 fill="currentColor"
                               />
                             </div>
@@ -244,17 +225,17 @@ export default function VideoOfTheDayCarouselMouse() {
                     {/* Video Info */}
                     <div className="space-y-3">
                       <div>
-                        <h3 className="text-lg font-bold text-white leading-tight mb-2 line-clamp-2">
+                        <h3 className="mb-2 text-lg font-bold leading-tight text-white line-clamp-2">
                           {video.title}
                         </h3>
-                        <p className="text-purple-200 text-sm font-medium">
+                        <p className="text-sm font-medium text-purple-200">
                           {video.channel}
                         </p>
 
                         {/* View count */}
-                        <div className="flex items-center space-x-2 mt-2">
+                        <div className="flex items-center mt-2 space-x-2">
                           <Eye className="w-4 h-4 text-blue-400" />
-                          <span className="text-blue-300 text-sm">
+                          <span className="text-sm text-blue-300">
                             {formatViews(video.views)} views
                           </span>
                         </div>
@@ -262,15 +243,15 @@ export default function VideoOfTheDayCarouselMouse() {
 
                       {/* Audio player if available and active */}
                       {isActive && video.audio_url && (
-                        <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 relative z-40">
-                          <div className="flex items-center justify-between">
-                            <p className="text-white text-sm font-medium">
+                        <div className="relative z-40 p-3 rounded-lg backdrop-blur-sm bg-white/10">
+                          <div className="flex justify-between items-center">
+                            <p className="text-sm font-medium text-white">
                               AI Preview
                             </p>
 
                             <audio
                               controls
-                              className="h-8 scale-90 relative z-50"
+                              className="relative z-50 h-8 scale-90"
                               preload="metadata"
                               style={{
                                 pointerEvents: "auto",
@@ -288,7 +269,7 @@ export default function VideoOfTheDayCarouselMouse() {
                       {isActive && (
                         <button
                           onClick={() => window.open(video.url, "_blank")}
-                          className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold py-2 px-4 rounded-lg transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg text-sm relative z-40"
+                          className="flex relative z-40 justify-center items-center px-4 py-2 space-x-2 w-full text-sm font-bold text-white bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg shadow-lg transition-all duration-300 hover:from-purple-600 hover:to-pink-600"
                           style={{ pointerEvents: "auto", cursor: "pointer" }}
                         >
                           <Play className="w-4 h-4" fill="currentColor" />
@@ -305,7 +286,7 @@ export default function VideoOfTheDayCarouselMouse() {
 
         {/* Progress Indicator */}
         <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
-          <div className="w-64 h-2 bg-white/10 rounded-full">
+          <div className="w-64 h-2 rounded-full bg-white/10">
             <div
               className="h-full bg-purple-400 rounded-full transition-all duration-300"
               style={{
@@ -319,33 +300,40 @@ export default function VideoOfTheDayCarouselMouse() {
       {/* Mobile Version - Simple Card */}
       <div className="md:hidden">
         {videos.length > 0 && (
-          <div className="bg-gray-900/80 backdrop-blur-sm rounded-2xl overflow-hidden shadow-lg border border-gray-700">
+          <div className="overflow-hidden rounded-2xl border border-gray-700 shadow-lg backdrop-blur-sm bg-gray-900/80">
             {/* Use the first video (video of the day) for mobile */}
             {(() => {
               const video = videos[0];
               return (
                 <>
                   {/* Video Thumbnail */}
-                  <div 
-                    className="relative cursor-pointer" 
-                    onClick={() => window.open(video.url, '_blank')}
+                  <div
+                    className="relative cursor-pointer"
+                    onClick={() => window.open(video.url, "_blank")}
                   >
-                    <div className="aspect-video bg-gray-800">
+                    <div className="bg-gray-800 aspect-video">
                       <img
-                        src={video.thumbnail || 'https://via.placeholder.com/640x360/1a1a1a/666666?text=No+Thumbnail'}
+                        src={
+                          video.thumbnail ||
+                          "https://via.placeholder.com/640x360/1a1a1a/666666?text=No+Thumbnail"
+                        }
                         alt={video.title}
-                        className="w-full h-full object-cover"
+                        className="object-cover w-full h-full"
                         loading="lazy"
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
-                          target.src = 'https://via.placeholder.com/640x360/1a1a1a/666666?text=No+Thumbnail';
+                          target.src =
+                            "https://via.placeholder.com/640x360/1a1a1a/666666?text=No+Thumbnail";
                         }}
                       />
-                      
+
                       {/* Play Button Overlay - Always visible on mobile */}
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-                        <div className="w-16 h-16 bg-white/90 rounded-full flex items-center justify-center shadow-lg">
-                          <Play className="w-8 h-8 text-gray-900 ml-1" fill="currentColor" />
+                      <div className="flex absolute inset-0 justify-center items-center bg-black/20">
+                        <div className="flex justify-center items-center w-16 h-16 rounded-full shadow-lg bg-white/90">
+                          <Play
+                            className="ml-1 w-8 h-8 text-gray-900"
+                            fill="currentColor"
+                          />
                         </div>
                       </div>
                     </div>
@@ -354,27 +342,37 @@ export default function VideoOfTheDayCarouselMouse() {
                   {/* Video Info */}
                   <div className="p-4 space-y-3">
                     <div>
-                      <p className="text-purple-300 text-xs mb-2">
-                        🔥 {video.is_video_of_day ? "Video of the Day" : "Featured Video"} • {getDaysAgoText(video.days_ago)}
+                      <p className="mb-2 text-xs text-purple-300">
+                        🔥{" "}
+                        {video.is_video_of_day
+                          ? "Video of the Day"
+                          : "Featured Video"}{" "}
+                        • {getDaysAgoText(video.days_ago)}
                       </p>
-                      <h3 className="text-lg font-bold text-white leading-tight line-clamp-2">
+                      <h3 className="text-lg font-bold leading-tight text-white line-clamp-2">
                         {video.title}
                       </h3>
                     </div>
-                    
-                    <div className="flex items-center justify-between text-sm">
-                      <p className="text-gray-300 font-medium truncate">{video.channel}</p>
+
+                    <div className="flex justify-between items-center text-sm">
+                      <p className="font-medium text-gray-300 truncate">
+                        {video.channel}
+                      </p>
                       <div className="flex items-center space-x-1">
                         <Eye className="w-4 h-4 text-blue-400" />
-                        <span className="text-blue-300">{formatViews(video.views)}</span>
+                        <span className="text-blue-300">
+                          {formatViews(video.views)}
+                        </span>
                       </div>
                     </div>
 
                     {/* Audio player for mobile */}
                     {video.audio_url && (
-                      <div className="bg-white/5 rounded-lg p-3">
-                        <div className="flex items-center justify-between">
-                          <p className="text-white text-sm font-medium">AI Preview</p>
+                      <div className="p-3 rounded-lg bg-white/5">
+                        <div className="flex justify-between items-center">
+                          <p className="text-sm font-medium text-white">
+                            AI Preview
+                          </p>
                           <audio
                             controls
                             className="h-6 scale-90"

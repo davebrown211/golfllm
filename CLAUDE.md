@@ -2,6 +2,16 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## IMPORTANT WORKFLOW RULES
+
+**DO NOT commit or push changes without explicit user approval.** Always:
+1. Make the requested changes to files
+2. Show the user what changes were made  
+3. Ask for permission before committing/pushing
+4. Let the user handle git operations themselves
+
+Exception: only commit/push if the user explicitly asks you to do so.
+
 ## Project Overview
 
 This is a golf video directory application with a Python backend scheduler and Next.js frontend. The system collects, analyzes, and curates golf videos from YouTube using AI-powered content analysis.

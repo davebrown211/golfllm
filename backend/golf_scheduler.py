@@ -406,29 +406,102 @@ class GolfScheduler:
         except Exception as e:
             logger.error(f"Error in collect today videos: {e}")
     
+    def get_video_of_the_day(self):
+        """Get the current video of the day using momentum score algorithm"""
+        try:
+            with self.db_manager.get_connection() as conn:
+                with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
+                    # Match the exact logic from the Next.js API
+                    query = """
+                        WITH trending_candidates AS (
+                          SELECT 
+                            yv.id,
+                            yv.title,
+                            yc.title as channel,
+                            yv.view_count,
+                            yv.like_count,
+                            yv.engagement_rate,
+                            yv.published_at,
+                            yv.view_velocity,
+                            yv.thumbnail_url,
+                            yv.duration_seconds,
+                            -- Include AI analysis data
+                            va.result as ai_analysis,
+                            va.status as analysis_status,
+                            -- Calculate "freshness score" - heavily prioritize recent videos
+                            CASE 
+                              WHEN yv.published_at >= CURRENT_DATE THEN yv.view_count * 5000   -- 5000x boost for today's videos
+                              WHEN yv.published_at >= NOW() - '1 day'::interval THEN yv.view_count * 100    -- 100x boost for last 24h
+                              WHEN yv.published_at >= NOW() - '2 day'::interval THEN yv.view_count * 10     -- 10x boost for last 48h
+                              WHEN yv.published_at >= NOW() - '3 day'::interval THEN yv.view_count * 1      -- Raw view count for 3 days
+                              ELSE yv.view_count * 0.001                                                      -- Very low score for older
+                            END as momentum_score
+                          FROM youtube_videos yv
+                          JOIN youtube_channels yc ON yv.channel_id = yc.id
+                          LEFT JOIN video_analyses va ON va.youtube_url LIKE '%' || yv.id || '%'
+                            AND va.status = 'COMPLETED'
+                          WHERE yv.published_at >= NOW() - '14 day'::interval  -- Expand search window  
+                            AND yv.view_count > 100                           -- Much lower threshold to find recent content
+                            AND (yv.engagement_rate > 0.1 OR yv.engagement_rate IS NULL)  -- Allow null engagement for recent videos
+                            AND yv.thumbnail_url IS NOT NULL                  -- Must have thumbnail
+                            AND (yv.duration_seconds IS NULL OR yv.duration_seconds > 60)  -- Exclude shorts
+                            AND yv.channel_id = ANY(%s::text[])               -- Only whitelisted creators
+                            AND yv.title !~ '[あ-ん]'  -- Exclude Japanese hiragana
+                            AND yv.title !~ '[ア-ン]'  -- Exclude Japanese katakana
+                            AND yv.title !~ '[一-龯]'  -- Exclude Chinese/Japanese kanji
+                            AND yv.title !~ '[À-ÿ]'  -- Exclude accented characters (Italian, French, etc.)
+                            AND yv.title NOT ILIKE '%volkswagen%'  -- Exclude VW Golf cars
+                            AND yv.title NOT ILIKE '%vw golf%'
+                            AND yv.title NOT ILIKE '%gta%'  -- Exclude GTA games
+                            AND yv.title NOT ILIKE '%forza%'  -- Exclude racing games
+                            AND yv.title NOT ILIKE '%drive beyond%'  -- Exclude racing games
+                            AND yv.title NOT ILIKE '%golf cart%'  -- Focus on golf sport, not carts
+                        )
+                        SELECT 
+                          id as video_id,
+                          title,
+                          channel,
+                          ai_analysis,
+                          analysis_status
+                        FROM trending_candidates
+                        ORDER BY momentum_score DESC, view_velocity DESC, engagement_rate DESC
+                        LIMIT 1
+                    """
+                    
+                    cur.execute(query, (self.whitelisted_channels,))
+                    row = cur.fetchone()
+                    
+                    if not row:
+                        logger.info("No video of the day found")
+                        return None
+                    
+                    return {
+                        'video_id': row['video_id'],
+                        'title': row['title'],
+                        'channel': row['channel'],
+                        'has_ai_analysis': bool(row['ai_analysis']),
+                        'analysis_status': row['analysis_status']
+                    }
+                    
+        except Exception as e:
+            logger.error(f"Error getting video of the day: {e}")
+            return None
+    
     def generate_ai_for_video_of_day(self):
         """Generate AI analysis for video of the day if missing"""
         try:
-            # Call the frontend API to get the current video of the day
-            import requests
+            # Get video of the day directly from database
+            video_data = self.get_video_of_the_day()
             
-            # Use localhost since we're on the same server
-            response = requests.get('http://localhost:3000/api/video-of-the-day')
-            
-            if response.status_code != 200:
-                logger.error(f"Failed to get video of the day from API: {response.status_code}")
+            if not video_data:
+                logger.info("No video of the day found")
                 return
-                
-            video_data = response.json()
-            video_id = video_data.get('video_id')
-            title = video_data.get('title')
             
-            if not video_id:
-                logger.info("No video of the day found from API")
-                return
+            video_id = video_data['video_id']
+            title = video_data['title']
             
             # Check if this video already has AI analysis
-            if video_data.get('has_ai_analysis'):
+            if video_data['has_ai_analysis']:
                 logger.info(f"Video of the day already has AI analysis: {title}")
                 return
                 

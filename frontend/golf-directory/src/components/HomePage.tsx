@@ -1,7 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Play, ChevronLeft, ChevronRight, Clock, RefreshCw } from "lucide-react";
+import {
+  Play,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  RefreshCw,
+} from "lucide-react";
 import { api } from "@/lib/api";
 import VideoOfTheDayCarouselMouse from "./VideoOfTheDayCarouselMouse";
 
@@ -27,9 +33,16 @@ interface DirectoryStats {
 interface VideoCardProps {
   video: VideoRanking;
   index: number;
+  shouldAnimate?: boolean;
+  className?: string;
 }
 
-function VideoCard({ video, index }: VideoCardProps) {
+function VideoCard({
+  video,
+  index,
+  shouldAnimate = false,
+  className = "",
+}: VideoCardProps) {
   const formatViews = (views: string) => {
     const num = parseInt(views.replace(/,/g, ""));
     return api.formatViews(num);
@@ -62,11 +75,15 @@ function VideoCard({ video, index }: VideoCardProps) {
 
   return (
     <div
-      className="group cursor-pointer transition-all duration-300"
-      style={{
-        animationDelay: `${index * 100}ms`,
-        animation: "fadeInUp 0.6s ease-out forwards",
-      }}
+      className={`transition-all duration-300 cursor-pointer group ${className}`}
+      style={
+        shouldAnimate
+          ? {
+              animationDelay: `${index * 100}ms`,
+              animation: "fadeInUp 0.6s ease-out forwards",
+            }
+          : {}
+      }
     >
       {/* Video Thumbnail - Mobile Optimized */}
       <div className="relative aspect-video rounded-xl overflow-hidden bg-gray-800 mb-3 group-hover:scale-[1.02] transition-transform duration-300 touch-manipulation">
@@ -76,7 +93,7 @@ function VideoCard({ video, index }: VideoCardProps) {
             "https://via.placeholder.com/480x270/1a1a1a/666666?text=No+Thumbnail"
           }
           alt={video.title}
-          className="w-full h-full object-cover"
+          className="object-cover w-full h-full"
           loading="lazy"
           decoding="async"
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
@@ -88,15 +105,18 @@ function VideoCard({ video, index }: VideoCardProps) {
         />
 
         {/* Play Button Overlay - Responsive sizing */}
-        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 md:group-hover:opacity-100 active:opacity-100 transition-all duration-300 bg-black/20">
-          <div className="w-12 h-12 md:w-16 md:h-16 bg-white/90 rounded-full flex items-center justify-center shadow-lg">
-            <Play className="w-5 h-5 md:w-7 md:h-7 text-gray-900 ml-1" fill="currentColor" />
+        <div className="flex absolute inset-0 justify-center items-center opacity-0 transition-all duration-300 group-hover:opacity-100 md:group-hover:opacity-100 active:opacity-100 bg-black/20">
+          <div className="flex justify-center items-center w-12 h-12 rounded-full shadow-lg md:w-16 md:h-16 bg-white/90">
+            <Play
+              className="ml-1 w-5 h-5 text-gray-900 md:w-7 md:h-7"
+              fill="currentColor"
+            />
           </div>
         </div>
 
         {/* Duration Badge - Mobile optimized */}
-        <div className="absolute bottom-2 right-2">
-          <div className="px-2 py-1 bg-black/70 backdrop-blur-sm rounded text-white text-xs font-medium">
+        <div className="absolute right-2 bottom-2">
+          <div className="px-2 py-1 text-xs font-medium text-white rounded backdrop-blur-sm bg-black/70">
             {getDaysAgo(video.published)}
           </div>
         </div>
@@ -113,16 +133,18 @@ function VideoCard({ video, index }: VideoCardProps) {
 
       {/* Video Info - Below thumbnail like YouTube */}
       <div className="px-1">
-        <h3 className="font-semibold text-white text-sm md:text-sm leading-tight mb-2 line-clamp-2 group-hover:text-blue-300 transition-colors duration-300">
+        <h3 className="mb-2 text-sm font-semibold leading-tight text-white transition-colors duration-300 md:text-sm line-clamp-2 group-hover:text-blue-300">
           {video.title}
         </h3>
 
-        <p className="text-gray-400 text-sm mb-1 truncate">{video.channel}</p>
+        <p className="mb-1 text-sm text-gray-400 truncate">{video.channel}</p>
 
-        <div className="flex items-center text-gray-500 text-xs space-x-2">
+        <div className="flex items-center space-x-2 text-xs text-gray-500">
           <span className="truncate">{formatViews(video.views)} views</span>
           <span className="hidden sm:inline">•</span>
-          <span className="hidden sm:inline truncate">{video.engagement} engagement</span>
+          <span className="hidden truncate sm:inline">
+            {video.engagement} engagement
+          </span>
         </div>
       </div>
     </div>
@@ -140,7 +162,7 @@ interface CategorySectionProps {
   currentPage?: number;
   sectionKey: string;
   refreshAnimating: string | null;
-  isMobile: boolean;
+  hasNavigated: boolean;
 }
 
 function CategorySection({
@@ -154,14 +176,14 @@ function CategorySection({
   currentPage = 0,
   sectionKey,
   refreshAnimating,
-  isMobile,
+  hasNavigated,
 }: CategorySectionProps) {
   return (
     <div className="mb-16">
       {/* Section Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex justify-between items-center mb-6">
         <div>
-          <h2 className="text-xl md:text-2xl font-bold text-white tracking-tight">
+          <h2 className="text-xl font-bold tracking-tight text-white md:text-2xl">
             {title}
           </h2>
         </div>
@@ -172,60 +194,64 @@ function CategorySection({
             onClick={onPrevious}
             disabled={!canGoPrevious || isLoading}
             className={`min-w-[44px] min-h-[44px] p-3 md:p-2 bg-white/10 hover:bg-white/20 rounded-lg transition-all duration-300 backdrop-blur-sm touch-manipulation ${
-              !canGoPrevious ? "opacity-50 cursor-not-allowed" : "hover:scale-110 active:scale-95"
+              !canGoPrevious
+                ? "opacity-50 cursor-not-allowed"
+                : "hover:scale-110 active:scale-95"
             }`}
             title="Previous videos"
             aria-label="Show previous videos"
           >
-            <ChevronLeft className="w-5 h-5 md:w-5 md:h-5 text-white" />
+            <ChevronLeft className="w-5 h-5 text-white md:w-5 md:h-5" />
           </button>
 
-          <span className="text-white/60 text-xs md:text-sm px-1 md:px-2">
+          <span className="px-1 text-xs text-white/60 md:text-sm md:px-2">
             {currentPage + 1}
           </span>
 
           <button
             onClick={onNext}
             disabled={isLoading}
-            className={`min-w-[44px] min-h-[44px] p-3 md:p-2 bg-white/10 hover:bg-white/20 rounded-lg transition-all duration-300 backdrop-blur-sm hover:scale-110 active:scale-95 touch-manipulation`}
+            className={`p-3 rounded-lg backdrop-blur-sm transition-all duration-300 min-w-[44px] min-h-[44px] md:p-2 bg-white/10 hover:bg-white/20 hover:scale-110 active:scale-95 touch-manipulation`}
             title="Next videos"
             aria-label="Show next videos"
           >
-            <ChevronRight className="w-5 h-5 md:w-5 md:h-5 text-white" />
+            <ChevronRight className="w-5 h-5 text-white md:w-5 md:h-5" />
           </button>
 
           <button
             onClick={onReset}
             disabled={currentPage === 0 || refreshAnimating === sectionKey}
             className={`min-w-[44px] min-h-[44px] p-3 md:p-2 bg-white/10 hover:bg-white/20 rounded-lg transition-all duration-300 backdrop-blur-sm touch-manipulation ${
-              currentPage === 0 || refreshAnimating === sectionKey ? "opacity-50 cursor-not-allowed" : "hover:scale-110 active:scale-95"
+              currentPage === 0 || refreshAnimating === sectionKey
+                ? "opacity-50 cursor-not-allowed"
+                : "hover:scale-110 active:scale-95"
             }`}
             title="Return to first page"
             aria-label="Return to first page of videos"
           >
-            <RefreshCw className={`w-4 h-4 md:w-4 md:h-4 text-white ${refreshAnimating === sectionKey ? "refresh-spinning" : ""}`} />
+            <RefreshCw
+              className={`w-4 h-4 md:w-4 md:h-4 text-white ${
+                refreshAnimating === sectionKey ? "refresh-spinning" : ""
+              }`}
+            />
           </button>
         </div>
       </div>
 
       {/* Video Grid - Mobile: 1 video, Desktop: 3 videos */}
-      <div 
-        className="gap-6"
-        style={{
-          display: 'grid',
-          gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)'
-        }}
-      >
+      <div className="grid gap-6 grid-cols-1 lg:grid-cols-3">
         {videos.length > 0 ? (
-          (isMobile ? videos.slice(0, 1) : videos).map((video, index) => (
+          videos.map((video, index) => (
             <VideoCard
               key={`${title}-${video.url}-${index}`}
               video={video}
               index={index}
+              shouldAnimate={hasNavigated}
+              className={index >= 1 ? "hidden lg:block" : ""}
             />
           ))
         ) : (
-          <div className="col-span-full text-center py-8">
+          <div className="col-span-full py-8 text-center">
             <p className="text-gray-400">No videos available</p>
           </div>
         )}
@@ -239,69 +265,34 @@ function CategorySection({
   );
 }
 
-export default function HomePage() {
-  const [curatedVideos, setCuratedVideos] = useState<VideoRanking[]>([]);
-  const [discoveryVideos, setDiscoveryVideos] = useState<VideoRanking[]>([]);
-  const [stats, setStats] = useState<DirectoryStats | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+interface HomePageProps {
+  initialCuratedVideos: VideoRanking[];
+  initialDiscoveryVideos: VideoRanking[];
+  initialStats: DirectoryStats;
+  initialVideosWithAudio: any[];
+  initialVideoOfTheDay: any;
+}
+
+export default function HomePage({
+  initialCuratedVideos,
+  initialDiscoveryVideos,
+  initialStats,
+  initialVideosWithAudio,
+  initialVideoOfTheDay,
+}: HomePageProps) {
+  const [curatedVideos, setCuratedVideos] = useState<VideoRanking[]>(
+    initialCuratedVideos.slice(0, 3)
+  );
+  const [discoveryVideos, setDiscoveryVideos] = useState<VideoRanking[]>(
+    initialDiscoveryVideos.slice(0, 3)
+  );
   const [refreshingSection, setRefreshingSection] = useState<string | null>(
     null
   );
-  const [includeShorts, setIncludeShorts] = useState(false);
   const [curatedOffset, setCuratedOffset] = useState(0);
   const [discoveryOffset, setDiscoveryOffset] = useState(0);
   const [refreshAnimating, setRefreshAnimating] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Debug state changes (can be removed in production)
-  useEffect(() => {
-    console.log("📊 Curated videos updated:", curatedVideos.length, "videos");
-  }, [curatedVideos]);
-
-  useEffect(() => {
-    console.log(
-      "🔍 Discovery videos updated:",
-      discoveryVideos.length,
-      "videos"
-    );
-  }, [discoveryVideos]);
-
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 1024);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  useEffect(() => {
-    loadAllData();
-  }, []);
-
-  const loadAllData = async () => {
-    try {
-      setIsLoading(true);
-      const [curatedResponse, discoveryResponse, directoryStats] =
-        await Promise.all([
-          fetch("/api/curated-videos"),
-          fetch("/api/discovery-videos"),
-          api.getStats(),
-        ]);
-
-      const curated = await curatedResponse.json();
-      const discovery = await discoveryResponse.json();
-
-      setCuratedVideos(curated.videos?.slice(0, 3) || []);
-      setDiscoveryVideos(discovery.videos?.slice(0, 3) || []);
-      setStats(directoryStats);
-    } catch (err) {
-      console.error("Error loading data:", err);
-      // Set empty arrays on error
-      setCuratedVideos([]);
-      setDiscoveryVideos([]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const [hasNavigated, setHasNavigated] = useState(false);
 
   const navigateSection = async (
     section: string,
@@ -310,6 +301,7 @@ export default function HomePage() {
     try {
       console.log(`🔄 Refreshing ${section} section...`);
       setRefreshingSection(section);
+      setHasNavigated(true);
 
       if (section === "curated") {
         let targetOffset = curatedOffset;
@@ -324,52 +316,18 @@ export default function HomePage() {
           setTimeout(() => setRefreshAnimating(null), 800);
         }
 
-        console.log(
-          `🎯 Fetching curated videos with offset ${targetOffset}...`
-        );
-        const response = await fetch(
-          `/api/curated-videos?offset=${targetOffset}&limit=3&t=${Date.now()}`,
-          {
-            cache: "no-cache",
-            headers: {
-              "Cache-Control": "no-cache",
-              Pragma: "no-cache",
-            },
-          }
-        );
-        const data = await response.json();
-        console.log(
-          "✅ Curated videos refreshed:",
-          data.videos?.length,
-          "videos available"
-        );
-        const newVideos = data.videos || [];
+        // For now, just cycle through the initial data
+        // In a full implementation, you'd need API endpoints or more sophisticated SSR
+        const allVideos = initialCuratedVideos;
+        const newVideos = allVideos.slice(targetOffset, targetOffset + 3);
 
-        // If no videos returned on next, reset to beginning
-        if (
-          newVideos.length === 0 &&
-          direction === "next" &&
-          targetOffset > 0
-        ) {
-          console.log(
-            "🔄 Reached end of curated videos, looping back to beginning..."
-          );
-          const resetResponse = await fetch(
-            `/api/curated-videos?offset=0&limit=3&t=${Date.now()}`,
-            {
-              cache: "no-cache",
-              headers: {
-                "Cache-Control": "no-cache",
-                Pragma: "no-cache",
-              },
-            }
-          );
-          const resetData = await resetResponse.json();
-          setCuratedVideos([...(resetData.videos || [])]);
-          setCuratedOffset(0);
-        } else if (newVideos.length > 0) {
-          setCuratedVideos([...newVideos]); // Force new array reference
+        if (newVideos.length > 0) {
+          setCuratedVideos(newVideos);
           setCuratedOffset(targetOffset);
+        } else if (direction === "next" && targetOffset > 0) {
+          // Loop back to beginning
+          setCuratedVideos(allVideos.slice(0, 3));
+          setCuratedOffset(0);
         }
       } else if (section === "discovery") {
         let targetOffset = discoveryOffset;
@@ -384,52 +342,16 @@ export default function HomePage() {
           setTimeout(() => setRefreshAnimating(null), 800);
         }
 
-        console.log(
-          `🔍 Fetching discovery videos with offset ${targetOffset}...`
-        );
-        const response = await fetch(
-          `/api/discovery-videos?offset=${targetOffset}&limit=3&t=${Date.now()}`,
-          {
-            cache: "no-cache",
-            headers: {
-              "Cache-Control": "no-cache",
-              Pragma: "no-cache",
-            },
-          }
-        );
-        const data = await response.json();
-        console.log(
-          "✅ Discovery videos refreshed:",
-          data.videos?.length,
-          "videos available"
-        );
-        const newVideos = data.videos || [];
+        const allVideos = initialDiscoveryVideos;
+        const newVideos = allVideos.slice(targetOffset, targetOffset + 3);
 
-        // If no videos returned on next, reset to beginning
-        if (
-          newVideos.length === 0 &&
-          direction === "next" &&
-          targetOffset > 0
-        ) {
-          console.log(
-            "🔄 Reached end of discovery videos, looping back to beginning..."
-          );
-          const resetResponse = await fetch(
-            `/api/discovery-videos?offset=0&limit=3&t=${Date.now()}`,
-            {
-              cache: "no-cache",
-              headers: {
-                "Cache-Control": "no-cache",
-                Pragma: "no-cache",
-              },
-            }
-          );
-          const resetData = await resetResponse.json();
-          setDiscoveryVideos([...(resetData.videos || [])]);
-          setDiscoveryOffset(0);
-        } else if (newVideos.length > 0) {
-          setDiscoveryVideos([...newVideos]); // Force new array reference
+        if (newVideos.length > 0) {
+          setDiscoveryVideos(newVideos);
           setDiscoveryOffset(targetOffset);
+        } else if (direction === "next" && targetOffset > 0) {
+          // Loop back to beginning
+          setDiscoveryVideos(allVideos.slice(0, 3));
+          setDiscoveryOffset(0);
         }
       }
     } catch (err) {
@@ -440,69 +362,38 @@ export default function HomePage() {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-20 h-20 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-6 animate-pulse">
-            <Play className="w-10 h-10 text-white" />
-          </div>
-          <p className="text-white text-lg">
-            Discovering fresh golf content...
-          </p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900">
-
       {/* Stats Bar - Mobile Optimized */}
-      {stats && (
-        <div className="border-b border-white/10 bg-black/30 backdrop-blur-sm">
-          <div className="max-w-7xl mx-auto px-4 md:px-6 py-3 md:py-4">
-            <div className="flex items-center justify-between text-white text-sm md:text-base">
-              <div className="flex items-center space-x-4 md:space-x-8 flex-1">
+      {initialStats && (
+        <div className="border-b backdrop-blur-sm border-white/10 bg-black/30">
+          <div className="px-4 py-3 mx-auto max-w-7xl md:px-6 md:py-4">
+            <div className="flex justify-between items-center text-sm text-white md:text-base">
+              <div className="flex flex-1 items-center space-x-4 md:space-x-8">
                 <div className="flex items-center space-x-1 md:space-x-2">
-                  <Play className="w-3 h-3 md:w-4 md:h-4 text-blue-400" />
-                  <span className="font-bold text-xs md:text-base">
-                    {stats.total_videos.toLocaleString()}
+                  <Play className="w-3 h-3 text-blue-400 md:w-4 md:h-4" />
+                  <span className="text-xs font-bold md:text-base">
+                    {initialStats.total_videos.toLocaleString()}
                   </span>
-                  <span className="text-gray-400 text-xs md:text-base hidden sm:inline">videos</span>
+                  <span className="hidden text-xs text-gray-400 md:text-base sm:inline">
+                    videos
+                  </span>
                 </div>
                 <div className="flex items-center space-x-1 md:space-x-2">
-                  <Clock className="w-3 h-3 md:w-4 md:h-4 text-green-400" />
-                  <span className="font-bold text-xs md:text-base">
-                    {stats.total_channels.toLocaleString()}
+                  <Clock className="w-3 h-3 text-green-400 md:w-4 md:h-4" />
+                  <span className="text-xs font-bold md:text-base">
+                    {initialStats.total_channels.toLocaleString()}
                   </span>
-                  <span className="text-gray-400 text-xs md:text-base hidden sm:inline">channels</span>
+                  <span className="hidden text-xs text-gray-400 md:text-base sm:inline">
+                    channels
+                  </span>
                 </div>
-                <div className="hidden md:flex items-center space-x-2">
+                <div className="hidden items-center space-x-2 md:flex">
                   <span className="text-gray-400">Updated</span>
                   <span className="font-bold">
-                    {new Date(stats.last_updated).toLocaleTimeString()}
+                    {new Date(initialStats.last_updated).toLocaleTimeString()}
                   </span>
                 </div>
-              </div>
-
-              {/* Shorts Toggle - Hidden on mobile for space */}
-              <div className="hidden md:flex items-center space-x-3">
-                <span className="text-gray-400 text-sm">
-                  {includeShorts ? "Shorts" : "Long-form"}
-                </span>
-                <button
-                  onClick={() => setIncludeShorts(!includeShorts)}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 ${
-                    includeShorts ? "bg-blue-500" : "bg-gray-600"
-                  }`}
-                >
-                  <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200 ${
-                      includeShorts ? "translate-x-6" : "translate-x-1"
-                    }`}
-                  />
-                </button>
               </div>
             </div>
           </div>
@@ -510,9 +401,12 @@ export default function HomePage() {
       )}
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 md:px-6 py-8 md:py-12">
+      <div className="px-4 py-8 mx-auto max-w-7xl md:px-6 md:py-12">
         {/* Video of the Day */}
-        <VideoOfTheDayCarouselMouse />
+        <VideoOfTheDayCarouselMouse
+          initialVideosWithAudio={initialVideosWithAudio}
+          initialVideoOfTheDay={initialVideoOfTheDay}
+        />
 
         {/* Curated Content from Whitelisted Creators */}
         <CategorySection
@@ -526,7 +420,7 @@ export default function HomePage() {
           currentPage={Math.floor(curatedOffset / 3)}
           sectionKey="curated"
           refreshAnimating={refreshAnimating}
-          isMobile={isMobile}
+          hasNavigated={hasNavigated}
         />
 
         {/* Discovery Content */}
@@ -541,7 +435,7 @@ export default function HomePage() {
           currentPage={Math.floor(discoveryOffset / 3)}
           sectionKey="discovery"
           refreshAnimating={refreshAnimating}
-          isMobile={isMobile}
+          hasNavigated={hasNavigated}
         />
       </div>
 

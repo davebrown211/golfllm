@@ -21,6 +21,12 @@ export const metadata: Metadata = {
   authors: [{ name: "StreamingRange" }],
   creator: "StreamingRange",
   publisher: "StreamingRange",
+  icons: {
+    icon: [
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/favicon.ico', type: 'image/x-icon' }
+    ],
+  },
   formatDetection: {
     email: false,
     address: false,
