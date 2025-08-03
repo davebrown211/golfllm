@@ -8,12 +8,28 @@
 const { google } = require('googleapis')
 
 const MISSING_CREATORS = [
-  'Rick Shiels Golf',
-  'Peter Finch Golf', 
-  'Bryson DeChambeau',
-  'Mark Crossfield',
-  'Golf Sidekick',
-  'James Robinson Golf'
+  'Me and My Golf',
+  'Clay Ballard Top Speed Golf',
+  'Chris Ryan Golf',
+  'Mike Malaska Golf',
+  'Eric Cogorno Golf',
+  'Adam Bazalgette Golf',
+  'Martin Chuck Tour Striker',
+  'Shawn Clement Golf',
+  'Paul Wilson Golf',
+  'Athletic Motion Golf',
+  'Performance Golf Zone',
+  'The Art of Simple Golf',
+  'Russell Heritage Golf',
+  'Alex Elliott Golf',
+  'Ali Taylor Golf',
+  'Dan Whittaker Golf',
+  'Matt Fryer Golf',
+  'Golfholics',
+  'Matt Blois Golf',
+  'Ian Fraser Golf',
+  'Club Champion Golf',
+  'TXG Golf'
 ]
 
 class ChannelIDFinder {

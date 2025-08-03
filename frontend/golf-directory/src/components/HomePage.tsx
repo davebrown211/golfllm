@@ -267,6 +267,7 @@ function CategorySection({
 
 interface HomePageProps {
   initialCuratedVideos: VideoRanking[];
+  initialInstructionalVideos: VideoRanking[];
   initialDiscoveryVideos: VideoRanking[];
   initialStats: DirectoryStats;
   initialVideosWithAudio: any[];
@@ -275,6 +276,7 @@ interface HomePageProps {
 
 export default function HomePage({
   initialCuratedVideos,
+  initialInstructionalVideos,
   initialDiscoveryVideos,
   initialStats,
   initialVideosWithAudio,
@@ -283,6 +285,9 @@ export default function HomePage({
   const [curatedVideos, setCuratedVideos] = useState<VideoRanking[]>(
     initialCuratedVideos.slice(0, 3)
   );
+  const [instructionalVideos, setInstructionalVideos] = useState<VideoRanking[]>(
+    initialInstructionalVideos.slice(0, 3)
+  );
   const [discoveryVideos, setDiscoveryVideos] = useState<VideoRanking[]>(
     initialDiscoveryVideos.slice(0, 3)
   );
@@ -290,6 +295,7 @@ export default function HomePage({
     null
   );
   const [curatedOffset, setCuratedOffset] = useState(0);
+  const [instructionalOffset, setInstructionalOffset] = useState(0);
   const [discoveryOffset, setDiscoveryOffset] = useState(0);
   const [refreshAnimating, setRefreshAnimating] = useState<string | null>(null);
   const [hasNavigated, setHasNavigated] = useState(false);
@@ -328,6 +334,30 @@ export default function HomePage({
           // Loop back to beginning
           setCuratedVideos(allVideos.slice(0, 3));
           setCuratedOffset(0);
+        }
+      } else if (section === "instructional") {
+        let targetOffset = instructionalOffset;
+
+        if (direction === "next") {
+          targetOffset = instructionalOffset + 3;
+        } else if (direction === "previous" && instructionalOffset >= 3) {
+          targetOffset = instructionalOffset - 3;
+        } else if (direction === "reset") {
+          targetOffset = 0;
+          setRefreshAnimating(section);
+          setTimeout(() => setRefreshAnimating(null), 800);
+        }
+
+        const allVideos = initialInstructionalVideos;
+        const newVideos = allVideos.slice(targetOffset, targetOffset + 3);
+
+        if (newVideos.length > 0) {
+          setInstructionalVideos(newVideos);
+          setInstructionalOffset(targetOffset);
+        } else if (direction === "next" && targetOffset > 0) {
+          // Loop back to beginning
+          setInstructionalVideos(allVideos.slice(0, 3));
+          setInstructionalOffset(0);
         }
       } else if (section === "discovery") {
         let targetOffset = discoveryOffset;
@@ -419,6 +449,21 @@ export default function HomePage({
           isLoading={refreshingSection === "curated"}
           currentPage={Math.floor(curatedOffset / 3)}
           sectionKey="curated"
+          refreshAnimating={refreshAnimating}
+          hasNavigated={hasNavigated}
+        />
+
+        {/* Instructional Content */}
+        <CategorySection
+          title="Instructional Videos"
+          videos={instructionalVideos}
+          onNext={() => navigateSection("instructional", "next")}
+          onPrevious={() => navigateSection("instructional", "previous")}
+          onReset={() => navigateSection("instructional", "reset")}
+          canGoPrevious={instructionalOffset > 0}
+          isLoading={refreshingSection === "instructional"}
+          currentPage={Math.floor(instructionalOffset / 3)}
+          sectionKey="instructional"
           refreshAnimating={refreshAnimating}
           hasNavigated={hasNavigated}
         />

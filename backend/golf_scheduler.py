@@ -67,6 +67,12 @@ class DatabaseManager:
     
     def upsert_video(self, conn, video_data: Dict[str, Any]):
         """Upsert video data (matches Next.js video-service logic)"""
+        # Skip videos under 2 minutes (120 seconds)
+        duration = video_data.get('duration_seconds', 0)
+        if duration is not None and duration > 0 and duration < 120:
+            logger.debug(f"Skipping video {video_data.get('id')} - duration {duration}s is under 2 minutes")
+            return
+            
         with conn.cursor() as cur:
             cur.execute("""
                 INSERT INTO youtube_videos (
@@ -149,7 +155,34 @@ class GolfScheduler:
         self.quota_reserve_percentage = 0.2  # Reserve 20% for essential operations
         
         # Import whitelisted channels from centralized file and normalize to IDs
-        self.whitelisted_channels = self.youtube_client.normalize_channel_list(WHITELISTED_CHANNELS)
+        logger.info(f"Raw whitelist loaded: {len(WHITELISTED_CHANNELS)} entries")
+        
+        # Load instructional whitelist
+        from golf_whitelist import get_channel_info
+        instructional_channels = []
+        try:
+            # Load instructional whitelist from JSON
+            import json
+            json_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'instructional_whitelist.json')
+            with open(json_path, 'r') as f:
+                instructional_data = json.load(f)
+            
+            for channel in instructional_data['channels']:
+                if channel.get('id'):
+                    instructional_channels.append(channel['id'])
+                if channel.get('handle'):
+                    instructional_channels.append(channel['handle'])
+                    
+            logger.info(f"Instructional whitelist loaded: {len(instructional_channels)} entries")
+        except Exception as e:
+            logger.warning(f"Could not load instructional whitelist: {e}")
+        
+        # Combine both whitelists
+        all_channels = WHITELISTED_CHANNELS + instructional_channels
+        logger.info(f"Combined whitelist: {len(all_channels)} entries total")
+        
+        self.whitelisted_channels = self.youtube_client.normalize_channel_list(all_channels)
+        logger.info(f"Normalized channels: {len(self.whitelisted_channels)} entries")
         
         logger.info("Golf Scheduler initialized")
     
@@ -468,7 +501,14 @@ class GolfScheduler:
                         LIMIT 1
                     """
                     
-                    cur.execute(query, (self.whitelisted_channels,))
+                    # Filter to only channel IDs (not handles)
+                    channel_ids = [ch for ch in self.whitelisted_channels if not ch.startswith('@') and ch]
+                    
+                    if not channel_ids:
+                        logger.warning("No valid channel IDs found in whitelist")
+                        return None
+                    
+                    cur.execute(query, (channel_ids,))
                     row = cur.fetchone()
                     
                     if not row:
@@ -648,13 +688,13 @@ class GolfScheduler:
         """Start the scheduler with the 3 refined tasks"""
         logger.info("Starting Golf Directory Python Scheduler")
         logger.info("Tasks:")
-        logger.info("- View count updates: Every 5 minutes (reduced from 2)")
+        logger.info("- View count updates: Every 2 minutes")
         logger.info("- Collect today videos + AI: Every 2 hours (reduced from 30 minutes)")
         logger.info("- Collect whitelisted channels: Every 2 hours (reduced from 30 minutes)")
         logger.info("- Daily maintenance: Every day at 3 AM")
         
         # Schedule the 4 tasks (optimized for quota usage)
-        schedule.every(5).minutes.do(self.perform_view_count_updates)  # Reduced frequency by 60%
+        schedule.every(2).minutes.do(self.perform_view_count_updates)  # Back to 2 minutes
         schedule.every(2).hours.do(self.perform_collect_today_videos)  # Reduced frequency by 75%
         schedule.every(2).hours.do(self.perform_collect_whitelisted_videos)  # Reduced frequency by 75%
         schedule.every().day.at("03:00").do(self.perform_maintenance_update)

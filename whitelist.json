@@ -56,11 +56,6 @@
       "handle": "@bryanbrosgolf"
     },
     {
-      "id": "UCB0NRdlQ6fBYQX8W8bQyoDA",
-      "name": "MyTPI",
-      "handle": "@mytpi"
-    },
-    {
       "id": "UCyy8ULLDGSm16_EkXdIt4Gw",
       "name": "Titleist",
       "handle": "@titleist"
@@ -88,19 +83,9 @@
       "x_handle": "@b_dechambeau"
     },
     {
-      "id": "UCZelGnfKLXic4gDP63dIRxw",
-      "name": "Mark Crossfield",
-      "handle": "@markcrossfield"
-    },
-    {
       "id": "UCaeGjmOiTxekbGUDPKhoU-A",
       "name": "Golf Sidekick",
       "handle": "@golfsidekick"
-    },
-    {
-      "id": "UCtNpbO2MtsVY4qW23WfnxGg",
-      "name": "James Robinson Golf",
-      "handle": "@jamesrobinsongolf"
     },
     {
       "id": "UCUOqlmPAo8h4pVQ4cuRECUg",
@@ -111,21 +96,6 @@
       "id": "UClljAz6ZKy0XeViKsohdjqA",
       "name": "GM Golf",
       "handle": "@gmgolf"
-    },
-    {
-      "id": "UCSwdmDQhAi_-ICkAvNBLEBw",
-      "name": "Danny Maude",
-      "handle": "@dannymaude"
-    },
-    {
-      "id": "UCJolpQHWLAW6cCUYGgean8w",
-      "name": "Padraig Harrington",
-      "handle": "@padraigharringtonofficial"
-    },
-    {
-      "id": "UCuXIBwKQeH9cnLOv7w66cJg",
-      "name": "MrShortGame Golf",
-      "handle": "@mrshortgame"
     },
     {
       "id": "UCXvDkP2X3aE9yrPavNMJv0A",
@@ -259,6 +229,10 @@
       "id": "UC7m4k9X2pRxuvzpwSz5jWgQ",
       "name": "Brooks Holt",
       "handle": "@brooksholt"
+    },
+    {
+      "name": "Sean Walsh",
+      "handle": "@seanwalshgolf"
     }
   ]
 }

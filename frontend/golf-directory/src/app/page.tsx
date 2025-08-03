@@ -1,7 +1,9 @@
 import HomePage from '../components/HomePage'
 import pool from '@/lib/database'
 
-async function getCuratedVideos(offset: number = 0, limit: number = 15) {
+export const revalidate = 60 // Revalidate every 60 seconds
+
+async function getCuratedVideos(offset: number = 0, limit: number = 200) {
   const client = await pool.connect()
   try {
     const { WHITELISTED_CHANNEL_IDS } = await import('@/lib/content-whitelist')
@@ -22,6 +24,7 @@ async function getCuratedVideos(offset: number = 0, limit: number = 15) {
       WHERE yv.channel_id = ANY($3::text[])
         AND yv.published_at >= NOW() - INTERVAL '14 days'
         AND yv.engagement_rate >= 1.0
+        AND (yv.duration_seconds IS NULL OR yv.duration_seconds >= 120)
       ORDER BY yv.published_at DESC
       LIMIT $1 OFFSET $2
     `
@@ -33,9 +36,15 @@ async function getCuratedVideos(offset: number = 0, limit: number = 15) {
   }
 }
 
-async function getDiscoveryVideos(offset: number = 0, limit: number = 15) {
+async function getDiscoveryVideos(offset: number = 0, limit: number = 200) {
   const client = await pool.connect()
   try {
+    const { WHITELISTED_CHANNEL_IDS } = await import('@/lib/content-whitelist')
+    const { INSTRUCTIONAL_CHANNEL_IDS } = await import('@/lib/instructional-content-whitelist')
+    
+    // Combine both whitelists to exclude - filter out empty values
+    const allWhitelistedIds = [...WHITELISTED_CHANNEL_IDS, ...INSTRUCTIONAL_CHANNEL_IDS].filter(id => id && id.trim())
+    
     const query = `
       SELECT 
         ROW_NUMBER() OVER (ORDER BY yv.published_at DESC) as rank,
@@ -53,11 +62,46 @@ async function getDiscoveryVideos(offset: number = 0, limit: number = 15) {
         AND yv.published_at >= NOW() - INTERVAL '14 days'
         AND yv.engagement_rate >= 2.0
         AND yv.view_count >= 5000
+        AND (yv.duration_seconds IS NULL OR yv.duration_seconds >= 120)
+        AND NOT (yv.channel_id = ANY($3::text[]))
       ORDER BY yv.published_at DESC
       LIMIT $1 OFFSET $2
     `
     
-    const result = await client.query(query, [limit, offset])
+    const result = await client.query(query, [limit, offset, allWhitelistedIds])
+    return result.rows
+  } finally {
+    client.release()
+  }
+}
+
+async function getInstructionalVideos(offset: number = 0, limit: number = 200) {
+  const client = await pool.connect()
+  try {
+    const { INSTRUCTIONAL_CHANNEL_IDS } = await import('@/lib/instructional-content-whitelist')
+    
+    const query = `
+      SELECT 
+        ROW_NUMBER() OVER (ORDER BY yv.published_at DESC) as rank,
+        yv.title,
+        yc.title as channel,
+        yv.view_count::text as views,
+        yv.like_count::text as likes,
+        CONCAT(ROUND(CAST(yv.engagement_rate AS numeric), 2), '%') as engagement,
+        yv.published_at::text as published,
+        CONCAT('https://youtube.com/watch?v=', yv.id) as url,
+        yv.thumbnail_url as thumbnail
+      FROM youtube_videos yv
+      JOIN youtube_channels yc ON yv.channel_id = yc.id
+      WHERE yv.channel_id = ANY($3::text[])
+        AND yv.published_at >= NOW() - INTERVAL '14 days'
+        AND yv.engagement_rate >= 0.5
+        AND (yv.duration_seconds IS NULL OR yv.duration_seconds >= 120)
+      ORDER BY yv.published_at DESC
+      LIMIT $1 OFFSET $2
+    `
+    
+    const result = await client.query(query, [limit, offset, INSTRUCTIONAL_CHANNEL_IDS])
     return result.rows
   } finally {
     client.release()
@@ -114,6 +158,7 @@ async function getVideosWithAudio() {
       WHERE va.audio_url IS NOT NULL
         AND va.status = 'COMPLETED'
         AND yv.published_at >= NOW() - INTERVAL '30 days'
+        AND (yv.duration_seconds IS NULL OR yv.duration_seconds >= 120)
       ORDER BY yv.published_at DESC
       LIMIT 10
     `
@@ -167,7 +212,7 @@ async function getVideoOfTheDay() {
           AND yv.view_count > 100
           AND (yv.engagement_rate > 0.1 OR yv.engagement_rate IS NULL)
           AND yv.thumbnail_url IS NOT NULL
-          AND (yv.duration_seconds IS NULL OR yv.duration_seconds > 60)
+          AND (yv.duration_seconds IS NULL OR yv.duration_seconds >= 120)
           AND yv.channel_id = ANY($1::text[])
           AND yv.title !~ '[あ-ん]'
           AND yv.title !~ '[ア-ン]'
@@ -284,8 +329,9 @@ function generateSummaryFromAnalysis(analysis: {
 }
 
 export default async function Home() {
-  const [curatedVideos, discoveryVideos, stats, videosWithAudio, videoOfTheDay] = await Promise.all([
+  const [curatedVideos, instructionalVideos, discoveryVideos, stats, videosWithAudio, videoOfTheDay] = await Promise.all([
     getCuratedVideos(),
+    getInstructionalVideos(),
     getDiscoveryVideos(),
     getStats(),
     getVideosWithAudio(),
@@ -295,6 +341,7 @@ export default async function Home() {
   return (
     <HomePage 
       initialCuratedVideos={curatedVideos}
+      initialInstructionalVideos={instructionalVideos}
       initialDiscoveryVideos={discoveryVideos}
       initialStats={stats}
       initialVideosWithAudio={videosWithAudio}

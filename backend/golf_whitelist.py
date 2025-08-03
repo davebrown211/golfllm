@@ -19,7 +19,7 @@ def load_whitelist() -> List[str]:
         # Extract both IDs and handles
         channels = []
         for channel in data['channels']:
-            if channel['id']:  # Only include non-empty IDs
+            if channel.get('id'):  # Only include non-empty IDs
                 channels.append(channel['id'])
             if channel.get('handle'):
                 channels.append(channel['handle'])  # Include handle if present
