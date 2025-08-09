@@ -178,7 +178,7 @@ async function getVideoOfTheDay() {
   const client = await pool.connect()
   try {
     const { WHITELISTED_CHANNEL_IDS } = await import('@/lib/content-whitelist')
-    const { getVideoOfTheDayQuery } = require('../../../../shared/video-of-the-day-query')
+    const { getVideoOfTheDayQuery } = require('../lib/video-of-the-day-query')
     
     const query = getVideoOfTheDayQuery()
     

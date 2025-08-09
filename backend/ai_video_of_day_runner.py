@@ -39,6 +39,7 @@ class AIVideoOfDayRunner:
         try:
             # Import whitelist to match scheduler behavior
             from golf_whitelist import WHITELISTED_CHANNELS
+            from datetime import timedelta
             
             # Get channel IDs only (not handles)
             channel_ids = [ch for ch in WHITELISTED_CHANNELS if isinstance(ch, str) and not ch.startswith('@') and ch]
@@ -47,17 +48,104 @@ class AIVideoOfDayRunner:
                 logger.warning("No valid channel IDs found in whitelist")
                 return None
             
-            # Import shared query
-            import sys
-            sys.path.append(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'shared'))
-            from video_of_the_day_query import get_video_of_the_day_query
+            logger.info(f"Using {len(channel_ids)} channel IDs: {channel_ids[:5]}...")  # Show first 5
             
             with psycopg2.connect(self.database_url) as conn:
                 with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
-                    query = get_video_of_the_day_query()
+                    # Get all candidates from last 14 days - no complex parameterized queries
+                    query = """
+                    SELECT 
+                      yv.id,
+                      yv.title,
+                      yc.title as channel,
+                      yv.channel_id,
+                      yv.view_count,
+                      yv.like_count,
+                      yv.engagement_rate,
+                      yv.published_at,
+                      yv.view_velocity,
+                      yv.thumbnail_url,
+                      yv.duration_seconds,
+                      va.result as ai_analysis,
+                      va.character_analysis,
+                      va.captions_preview,
+                      va.audio_url,
+                      va.status as analysis_status
+                    FROM youtube_videos yv
+                    JOIN youtube_channels yc ON yv.channel_id = yc.id
+                    LEFT JOIN video_analyses va ON va.youtube_url LIKE '%' || yv.id || '%'
+                      AND va.status = 'COMPLETED'
+                    WHERE yv.published_at >= NOW() - '14 day'::interval
+                      AND yv.view_count > 100
+                      AND (yv.engagement_rate > 0.1 OR yv.engagement_rate IS NULL)
+                      AND yv.thumbnail_url IS NOT NULL
+                      AND (yv.duration_seconds IS NULL OR yv.duration_seconds >= 120)
+                    """
                     
-                    cur.execute(query, (channel_ids,))
-                    return cur.fetchone()
+                    cur.execute(query)
+                    all_videos = cur.fetchall()
+                    logger.info(f"Found {len(all_videos)} candidate videos")
+                    
+                    # Filter by whitelisted channels and apply exclusions in Python
+                    candidates = []
+                    for video in all_videos:
+                        # Check if channel is whitelisted
+                        if video['channel_id'] not in channel_ids:
+                            continue
+                            
+                        # Apply title filters
+                        title = video['title'].lower()
+                        if any(exclusion in title for exclusion in [
+                            'volkswagen', 'vw golf', 'gta', 'forza', 'drive beyond', 'golf cart'
+                        ]):
+                            continue
+                            
+                        # Skip non-English titles (simple check)
+                        if any(ord(c) > 127 for c in video['title']):
+                            continue
+                        
+                        # Calculate momentum score
+                        from datetime import datetime, timezone
+                        published = video['published_at']
+                        now = datetime.now(timezone.utc)
+                        
+                        if published.date() >= now.date():
+                            momentum_score = video['view_count'] * 5000
+                        elif published >= now.replace(hour=0, minute=0, second=0) - timedelta(days=1):
+                            momentum_score = video['view_count'] * 100
+                        elif published >= now.replace(hour=0, minute=0, second=0) - timedelta(days=2):
+                            momentum_score = video['view_count'] * 10
+                        elif published >= now.replace(hour=0, minute=0, second=0) - timedelta(days=3):
+                            momentum_score = video['view_count'] * 1
+                        else:
+                            momentum_score = video['view_count'] * 0.001
+                        
+                        candidates.append((video, momentum_score))
+                    
+                    if not candidates:
+                        logger.info("No qualifying video candidates found after filtering")
+                        return None
+                    
+                    logger.info(f"Found {len(candidates)} videos after filtering")
+                    
+                    # Sort by momentum score, then view velocity, then engagement rate
+                    candidates.sort(key=lambda x: (
+                        x[1],  # momentum_score
+                        x[0]['view_velocity'] or 0,
+                        x[0]['engagement_rate'] or 0
+                    ), reverse=True)
+                    
+                    best_video = candidates[0][0]
+                    logger.info(f"Selected video: {best_video['title']} by {best_video['channel']}")
+                    
+                    # Return in format expected by rest of code
+                    return {
+                        'video_id': best_video['id'],
+                        'title': best_video['title'],
+                        'channel': best_video['channel'],
+                        'has_ai_analysis': bool(best_video['ai_analysis']),
+                        'analysis_status': best_video['analysis_status']
+                    }
                     
         except Exception as e:
             logger.error(f"Error getting video of the day: {e}", exc_info=True)
