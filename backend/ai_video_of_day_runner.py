@@ -167,9 +167,9 @@ class AIVideoOfDayRunner:
                     else:
                         # Insert new
                         cur.execute("""
-                            INSERT INTO video_analyses (youtube_url, result, audio_url, status)
-                            VALUES (%s, %s, %s, 'COMPLETED')
-                        """, (f"https://youtube.com/watch?v={video_id}", ai_result['summary'], ai_result.get('audio_url')))
+                            INSERT INTO video_analyses (video_id, youtube_url, result, audio_url, status)
+                            VALUES (%s, %s, %s, %s, 'COMPLETED')
+                        """, (video_id, f"https://youtube.com/watch?v={video_id}", ai_result['summary'], ai_result.get('audio_url')))
                     
                     conn.commit()
                     logger.info(f"Saved AI analysis for {video_id}")
