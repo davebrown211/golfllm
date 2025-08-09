@@ -207,11 +207,7 @@ async function getVideoOfTheDay() {
       days_ago: Math.floor((Date.now() - new Date(video.published_at).getTime()) / (1000 * 60 * 60 * 24)),
       has_ai_analysis: !!video.ai_analysis,
       analysis_status: video.analysis_status || null,
-      ai_summary: video.ai_analysis ? generateSummaryFromAnalysis({
-        result: video.ai_analysis,
-        character_analysis: video.character_analysis,
-        captions_preview: video.captions_preview
-      }) : null,
+      ai_summary: null, // Skip AI summary parsing for now since it's not displayed on main page
       audio_url: video.audio_url
     }
   } finally {
