@@ -3,10 +3,12 @@
 Golf Directory Scheduler - Python Implementation
 Matches the refined Next.js scheduler logic exactly
 
-Three main tasks:
+Five main tasks:
 1. View count updates (every 2 minutes) - Smart user-facing video selection
-2. Today collection + AI (every 30 minutes) - Today's videos + AI analysis
-3. Daily maintenance (3 AM) - Older popular video updates
+2. Today collection (every 2 hours) - Today's videos  
+3. Whitelisted collection (every 2 hours) - Whitelisted channels
+4. AI Video of the Day (every 15 minutes) - Generate AI summaries/audio for VOTD
+5. Daily maintenance (3 AM) - Older popular video updates
 """
 
 import os
@@ -26,6 +28,7 @@ from golf_whitelist import WHITELISTED_CHANNELS
 # Local imports
 from youtube_client import YouTubeClient
 from ai_processor import AIProcessor
+from ai_video_of_day_runner import AIVideoOfDayRunner
 
 # Load environment variables
 load_dotenv()
@@ -150,6 +153,7 @@ class GolfScheduler:
         # Initialize components
         self.youtube_client = YouTubeClient(youtube_api_key)
         self.ai_processor = AIProcessor(google_api_key, elevenlabs_api_key)
+        self.ai_video_runner = AIVideoOfDayRunner()
         self.db_manager = DatabaseManager(self.db_url)
         self.daily_quota_limit = 10000
         self.quota_reserve_percentage = 0.2  # Reserve 20% for essential operations
@@ -692,19 +696,55 @@ class GolfScheduler:
         except Exception as e:
             logger.error(f"Error in maintenance update: {e}")
     
+    def perform_ai_video_of_day(self):
+        """Generate AI summary and audio for current Video of the Day if not already done"""
+        logger.info("Starting AI Video of the Day generation task...")
+        try:
+            # Get current video of the day
+            video = self.ai_video_runner.get_current_video_of_day()
+            
+            if not video:
+                logger.info("No video of the day found")
+                return
+            
+            logger.info(f"Video of the Day: {video['title']} ({video['video_id']})")
+            
+            # Check if it already has audio
+            with self.db_manager.get_connection() as conn:
+                with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
+                    cur.execute("""
+                        SELECT audio_url FROM video_analyses 
+                        WHERE video_id = %s AND audio_url IS NOT NULL
+                    """, (video['video_id'],))
+                    existing = cur.fetchone()
+                    
+                    if existing:
+                        logger.info(f"Video {video['video_id']} already has audio, skipping")
+                        return
+            
+            logger.info(f"Generating AI content for {video['video_id']}")
+            # Generate AI content
+            self.ai_video_runner.generate_ai_for_video(video['video_id'], video['title'])
+            logger.info("AI Video of the Day generation completed")
+            
+        except Exception as e:
+            logger.error(f"Error in AI Video of the Day generation: {e}")
+    
     def start_scheduler(self):
-        """Start the scheduler with the 3 refined tasks"""
+        """Start the scheduler with the 5 tasks"""
         logger.info("Starting Golf Directory Python Scheduler")
         logger.info("Tasks:")
         logger.info("- View count updates: Every 2 minutes")
         logger.info("- Collect today videos + AI: Every 2 hours (reduced from 30 minutes)")
         logger.info("- Collect whitelisted channels: Every 2 hours (reduced from 30 minutes)")
+        logger.info("- AI Video of the Day: Every 15 minutes")
         logger.info("- Daily maintenance: Every day at 3 AM")
         
-        # Schedule the 4 tasks (optimized for quota usage)
+        # Schedule the 5 tasks (optimized for quota usage)
         schedule.every(2).minutes.do(self.perform_view_count_updates)  # Back to 2 minutes
         schedule.every(2).hours.do(self.perform_collect_today_videos)  # Reduced frequency by 75%
         schedule.every(2).hours.do(self.perform_collect_whitelisted_videos)  # Reduced frequency by 75%
+        schedule.every(15).minutes.do(self.perform_ai_video_of_day)  # AI generation every 15 minutes
         schedule.every().day.at("03:00").do(self.perform_maintenance_update)
         
         # Run initial collections on startup
