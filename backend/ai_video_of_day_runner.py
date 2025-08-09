@@ -161,15 +161,14 @@ class AIVideoOfDayRunner:
                             UPDATE video_analyses
                             SET result = %s,
                                 audio_url = %s,
-                                status = 'COMPLETED',
-                                updated_at = NOW()
+                                status = 'COMPLETED'
                             WHERE youtube_url LIKE %s
                         """, (ai_result['summary'], ai_result.get('audio_url'), f"%{video_id}%"))
                     else:
                         # Insert new
                         cur.execute("""
-                            INSERT INTO video_analyses (youtube_url, result, audio_url, status, created_at, updated_at)
-                            VALUES (%s, %s, %s, 'COMPLETED', NOW(), NOW())
+                            INSERT INTO video_analyses (youtube_url, result, audio_url, status)
+                            VALUES (%s, %s, %s, 'COMPLETED')
                         """, (f"https://youtube.com/watch?v={video_id}", ai_result['summary'], ai_result.get('audio_url')))
                     
                     conn.commit()
