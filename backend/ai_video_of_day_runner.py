@@ -35,7 +35,7 @@ class AIVideoOfDayRunner:
         self.ai_processor = AIProcessor(google_api_key, elevenlabs_api_key)
         
     def get_current_video_of_day(self):
-        """Get the current video of the day using the same logic as the scheduler"""
+        """Get the current video of the day using the exact same query as frontend"""
         try:
             # Import whitelist to match scheduler behavior
             from golf_whitelist import WHITELISTED_CHANNELS
@@ -47,68 +47,14 @@ class AIVideoOfDayRunner:
                 logger.warning("No valid channel IDs found in whitelist")
                 return None
             
+            # Import shared query
+            import sys
+            sys.path.append(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'shared'))
+            from video_of_the_day_query import get_video_of_the_day_query
+            
             with psycopg2.connect(self.database_url) as conn:
                 with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
-                    # Same query as scheduler's get_video_of_the_day
-                    query = """
-                    WITH trending_candidates AS (
-                        SELECT 
-                            yv.id,
-                            yv.title,
-                            yc.title as channel,
-                            yv.view_count,
-                            yv.engagement_rate,
-                            CASE 
-                                WHEN yv.view_count > 0 THEN 
-                                    (yv.view_count - COALESCE(lag(yv.view_count) OVER (PARTITION BY yv.id ORDER BY yv.updated_at), yv.view_count)) / 
-                                    NULLIF(EXTRACT(EPOCH FROM (yv.updated_at - lag(yv.updated_at) OVER (PARTITION BY yv.id ORDER BY yv.updated_at))) / 3600, 0)
-                                ELSE 0
-                            END as view_velocity,
-                            va.result IS NOT NULL as ai_analysis,
-                            va.status as analysis_status,
-                            va.audio_url,
-                            CASE 
-                                WHEN yv.published_at >= NOW() - '3 day'::interval THEN 
-                                    CASE 
-                                        WHEN yv.engagement_rate >= 2 THEN yv.view_count * 2.0
-                                        WHEN yv.engagement_rate >= 1 THEN yv.view_count * 1.5
-                                        ELSE yv.view_count * 1.0
-                                    END
-                                WHEN yv.published_at >= NOW() - '7 day'::interval THEN yv.view_count * 0.7
-                                ELSE yv.view_count * 0.001
-                            END as momentum_score
-                        FROM youtube_videos yv
-                        JOIN youtube_channels yc ON yv.channel_id = yc.id
-                        LEFT JOIN video_analyses va ON va.youtube_url LIKE '%%' || yv.id || '%%'
-                            AND va.status = 'COMPLETED'
-                        WHERE yv.published_at >= NOW() - '14 day'::interval
-                            AND yv.view_count > 100
-                            AND (yv.engagement_rate > 0.1 OR yv.engagement_rate IS NULL)
-                            AND yv.thumbnail_url IS NOT NULL
-                            AND (yv.duration_seconds IS NULL OR yv.duration_seconds > 60)
-                            AND yv.channel_id = ANY(%s::text[])
-                            AND yv.title !~ '[あ-ん]'
-                            AND yv.title !~ '[ア-ン]'
-                            AND yv.title !~ '[一-龯]'
-                            AND yv.title !~ '[À-ÿ]'
-                            AND yv.title NOT ILIKE '%%volkswagen%%'
-                            AND yv.title NOT ILIKE '%%vw golf%%'
-                            AND yv.title NOT ILIKE '%%gta%%'
-                            AND yv.title NOT ILIKE '%%forza%%'
-                            AND yv.title NOT ILIKE '%%drive beyond%%'
-                            AND yv.title NOT ILIKE '%%golf cart%%'
-                    )
-                    SELECT 
-                        id as video_id,
-                        title,
-                        channel,
-                        ai_analysis,
-                        analysis_status,
-                        audio_url
-                    FROM trending_candidates
-                    ORDER BY momentum_score DESC, view_velocity DESC, engagement_rate DESC
-                    LIMIT 1
-                    """
+                    query = get_video_of_the_day_query()
                     
                     cur.execute(query, (channel_ids,))
                     return cur.fetchone()

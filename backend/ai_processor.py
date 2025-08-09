@@ -18,6 +18,8 @@ except ImportError:
     # Fallback for older version
     from elevenlabs import generate, save
 import requests
+import boto3
+from botocore.exceptions import ClientError
 
 logger = logging.getLogger(__name__)
 
@@ -40,6 +42,32 @@ class AIProcessor:
         self.elevenlabs_api_key = elevenlabs_api_key
         if not elevenlabs_api_key:
             logger.warning("ElevenLabs API key not provided - audio generation disabled")
+        
+        # Configure DigitalOcean Spaces
+        self.spaces_client = None
+        self.spaces_bucket = os.getenv('SPACES_BUCKET_NAME', 'golf-directory-audio')
+        self.spaces_region = os.getenv('SPACES_REGION', 'nyc3')
+        self.spaces_endpoint = f'https://{self.spaces_region}.digitaloceanspaces.com'
+        self.cdn_endpoint = os.getenv('SPACES_CDN_ENDPOINT', f'https://{self.spaces_bucket}.{self.spaces_region}.cdn.digitaloceanspaces.com')
+        
+        spaces_key = os.getenv('SPACES_ACCESS_KEY')
+        spaces_secret = os.getenv('SPACES_SECRET_KEY')
+        
+        if spaces_key and spaces_secret:
+            try:
+                self.spaces_client = boto3.client(
+                    's3',
+                    region_name=self.spaces_region,
+                    endpoint_url=self.spaces_endpoint,
+                    aws_access_key_id=spaces_key,
+                    aws_secret_access_key=spaces_secret
+                )
+                logger.info(f"DigitalOcean Spaces configured: {self.spaces_bucket}")
+            except Exception as e:
+                logger.error(f"Failed to configure DigitalOcean Spaces: {e}")
+                self.spaces_client = None
+        else:
+            logger.warning("Spaces credentials not provided - falling back to local storage")
     
     def download_transcript(self, video_id: str) -> Optional[str]:
         """
@@ -241,11 +269,15 @@ IMPORTANT: Write directly in the commentator's voice. Do NOT include tone descri
                 logger.error(f"ElevenLabs API error: {response.status_code} {response.text}")
                 return None
             
-            # Save audio file to public directory
-            audio_filename = self._save_audio_file(response.content, video_id)
-            if audio_filename:
-                logger.info(f"Audio saved as {audio_filename}")
-                return f"/audio/{audio_filename}"
+            # Save audio file to DigitalOcean Spaces or local directory
+            audio_url = self._save_audio_file(response.content, video_id)
+            if audio_url:
+                logger.info(f"Audio saved: {audio_url}")
+                # _save_audio_file returns either a full CDN URL (Spaces) or filename (local)
+                if audio_url.startswith('http'):
+                    return audio_url  # Full CDN URL from Spaces
+                else:
+                    return f"/audio/{audio_url}"  # Local filename - add prefix
             
             return None
             
@@ -254,21 +286,50 @@ IMPORTANT: Write directly in the commentator's voice. Do NOT include tone descri
             return None
     
     def _save_audio_file(self, audio_data: bytes, video_id: str) -> Optional[str]:
-        """Save audio file to public directory (matches Next.js logic)"""
+        """Save audio file to DigitalOcean Spaces or fallback to local storage"""
+        filename = f"audio-{video_id}.mp3"
+        
+        # Try to upload to DigitalOcean Spaces first
+        if self.spaces_client:
+            try:
+                # Upload to Spaces
+                self.spaces_client.put_object(
+                    Bucket=self.spaces_bucket,
+                    Key=filename,
+                    Body=audio_data,
+                    ContentType='audio/mpeg',
+                    ACL='public-read'  # Make publicly accessible
+                )
+                
+                # Return the CDN URL
+                cdn_url = f"{self.cdn_endpoint}/{filename}"
+                logger.info(f"Audio file uploaded to Spaces: {cdn_url}")
+                return cdn_url
+                
+            except ClientError as e:
+                logger.error(f"Failed to upload to Spaces: {e}")
+                # Fall through to local storage
+            except Exception as e:
+                logger.error(f"Error uploading to Spaces: {e}")
+                # Fall through to local storage
+        
+        # Fallback to local storage (for development or if Spaces fails)
         try:
-            # Save to current directory (on droplet) and return relative URL
-            # The frontend will need to serve these files via an API endpoint
-            audio_dir = "/opt/golf-directory/audio"
-            os.makedirs(audio_dir, exist_ok=True)
+            # Use local path for development, production path for server
+            if os.path.exists("/opt/golf-directory"):
+                audio_dir = "/opt/golf-directory/audio"
+            else:
+                # Local development path
+                audio_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "frontend", "golf-directory", "public", "audio")
             
-            filename = f"audio-{video_id}.mp3"
+            os.makedirs(audio_dir, exist_ok=True)
             filepath = os.path.join(audio_dir, filename)
             
             with open(filepath, 'wb') as f:
                 f.write(audio_data)
             
-            logger.info(f"Audio file saved to {filepath}")
-            return filename
+            logger.info(f"Audio file saved locally to {filepath}")
+            return filename  # Return relative path for local storage
             
         except Exception as e:
             logger.error(f"Error saving audio file: {e}")
@@ -309,7 +370,7 @@ IMPORTANT: Write directly in the commentator's voice. Do NOT include tone descri
             audio_filename = self.generate_audio(summary, video_id)
             
             if audio_filename:
-                result['audio_url'] = audio_filename  # audio_filename already includes /audio/ prefix
+                result['audio_url'] = audio_filename  # Full URL (Spaces) or /audio/filename (local)
             
             logger.info("Transcript summary generation completed successfully")
             return result
