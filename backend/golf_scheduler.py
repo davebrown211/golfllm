@@ -432,9 +432,8 @@ class GolfScheduler:
                     self.record_quota_usage("videoList", len(video_ids) // 50 + 1)
                     self.record_quota_usage("channelList", len(channel_ids) // 50 + 1)
                 
-            # Step 2: Always check video of the day and generate AI if needed
-            # This runs every 30 minutes to ensure we have AI summaries
-            self.generate_ai_for_video_of_day()
+            # AI generation has been moved to a separate script (ai_summary_runner.py)
+            # to run independently and more reliably
             
         except Exception as e:
             logger.error(f"Error in collect today videos: {e}")
@@ -508,6 +507,8 @@ class GolfScheduler:
                         logger.warning("No valid channel IDs found in whitelist")
                         return None
                     
+                    logger.debug(f"Using {len(channel_ids)} channel IDs for video of day query")
+                    
                     cur.execute(query, (channel_ids,))
                     row = cur.fetchone()
                     
@@ -515,16 +516,23 @@ class GolfScheduler:
                         logger.info("No video of the day found")
                         return None
                     
-                    return {
-                        'video_id': row['video_id'],
-                        'title': row['title'],
-                        'channel': row['channel'],
-                        'has_ai_analysis': bool(row['ai_analysis']),
-                        'analysis_status': row['analysis_status']
-                    }
+                    # Safer row access with error handling
+                    try:
+                        result = {
+                            'video_id': row['video_id'],
+                            'title': row['title'],
+                            'channel': row['channel'],
+                            'has_ai_analysis': bool(row['ai_analysis']),
+                            'analysis_status': row['analysis_status']
+                        }
+                        logger.info(f"Video of the day selected: {result['title']} ({result['video_id']})")
+                        return result
+                    except (KeyError, TypeError, IndexError) as e:
+                        logger.error(f"Error accessing row data: {e}. Row type: {type(row)}, Row: {row}")
+                        return None
                     
         except Exception as e:
-            logger.error(f"Error getting video of the day: {e}")
+            logger.error(f"Error getting video of the day: {e}", exc_info=True)
             return None
     
     def generate_ai_for_video_of_day(self):

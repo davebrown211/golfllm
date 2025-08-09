@@ -1,0 +1,211 @@
+#!/usr/bin/env python3
+"""
+AI Video of the Day Runner - Generate AI summary and audio for the current video of the day only
+"""
+
+import os
+import sys
+import logging
+import psycopg2
+import psycopg2.extras
+from datetime import datetime
+from dotenv import load_dotenv
+from ai_processor import AIProcessor
+import time
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
+# Load environment variables
+load_dotenv()
+
+class AIVideoOfDayRunner:
+    def __init__(self):
+        self.database_url = os.getenv('DATABASE_URL')
+        google_api_key = os.getenv('GOOGLE_API_KEY')
+        elevenlabs_api_key = os.getenv('ELEVENLABS_API_KEY')
+        
+        if not self.database_url:
+            raise ValueError("DATABASE_URL environment variable is required")
+        
+        self.ai_processor = AIProcessor(google_api_key, elevenlabs_api_key)
+        
+    def get_current_video_of_day(self):
+        """Get the current video of the day using the same logic as the scheduler"""
+        try:
+            # Import whitelist to match scheduler behavior
+            from golf_whitelist import WHITELISTED_CHANNELS
+            
+            # Get channel IDs only (not handles)
+            channel_ids = [ch for ch in WHITELISTED_CHANNELS if isinstance(ch, str) and not ch.startswith('@') and ch]
+            
+            if not channel_ids:
+                logger.warning("No valid channel IDs found in whitelist")
+                return None
+            
+            with psycopg2.connect(self.database_url) as conn:
+                with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
+                    # Same query as scheduler's get_video_of_the_day
+                    query = """
+                    WITH trending_candidates AS (
+                        SELECT 
+                            yv.id,
+                            yv.title,
+                            yc.title as channel,
+                            yv.view_count,
+                            yv.engagement_rate,
+                            CASE 
+                                WHEN yv.view_count > 0 THEN 
+                                    (yv.view_count - COALESCE(lag(yv.view_count) OVER (PARTITION BY yv.id ORDER BY yv.updated_at), yv.view_count)) / 
+                                    NULLIF(EXTRACT(EPOCH FROM (yv.updated_at - lag(yv.updated_at) OVER (PARTITION BY yv.id ORDER BY yv.updated_at))) / 3600, 0)
+                                ELSE 0
+                            END as view_velocity,
+                            va.result IS NOT NULL as ai_analysis,
+                            va.status as analysis_status,
+                            va.audio_url,
+                            CASE 
+                                WHEN yv.published_at >= NOW() - '3 day'::interval THEN 
+                                    CASE 
+                                        WHEN yv.engagement_rate >= 2 THEN yv.view_count * 2.0
+                                        WHEN yv.engagement_rate >= 1 THEN yv.view_count * 1.5
+                                        ELSE yv.view_count * 1.0
+                                    END
+                                WHEN yv.published_at >= NOW() - '7 day'::interval THEN yv.view_count * 0.7
+                                ELSE yv.view_count * 0.001
+                            END as momentum_score
+                        FROM youtube_videos yv
+                        JOIN youtube_channels yc ON yv.channel_id = yc.id
+                        LEFT JOIN video_analyses va ON va.youtube_url LIKE '%%' || yv.id || '%%'
+                            AND va.status = 'COMPLETED'
+                        WHERE yv.published_at >= NOW() - '14 day'::interval
+                            AND yv.view_count > 100
+                            AND (yv.engagement_rate > 0.1 OR yv.engagement_rate IS NULL)
+                            AND yv.thumbnail_url IS NOT NULL
+                            AND (yv.duration_seconds IS NULL OR yv.duration_seconds > 60)
+                            AND yv.channel_id = ANY(%s::text[])
+                            AND yv.title !~ '[あ-ん]'
+                            AND yv.title !~ '[ア-ン]'
+                            AND yv.title !~ '[一-龯]'
+                            AND yv.title !~ '[À-ÿ]'
+                            AND yv.title NOT ILIKE '%%volkswagen%%'
+                            AND yv.title NOT ILIKE '%%vw golf%%'
+                            AND yv.title NOT ILIKE '%%gta%%'
+                            AND yv.title NOT ILIKE '%%forza%%'
+                            AND yv.title NOT ILIKE '%%drive beyond%%'
+                            AND yv.title NOT ILIKE '%%golf cart%%'
+                    )
+                    SELECT 
+                        id as video_id,
+                        title,
+                        channel,
+                        ai_analysis,
+                        analysis_status,
+                        audio_url
+                    FROM trending_candidates
+                    ORDER BY momentum_score DESC, view_velocity DESC, engagement_rate DESC
+                    LIMIT 1
+                    """
+                    
+                    cur.execute(query, (channel_ids,))
+                    return cur.fetchone()
+                    
+        except Exception as e:
+            logger.error(f"Error getting video of the day: {e}", exc_info=True)
+            return None
+    
+    def generate_ai_for_video(self, video_id, title):
+        """Generate AI summary and audio for a single video"""
+        try:
+            logger.info(f"Generating AI for Video of the Day: {title} ({video_id})")
+            
+            # Generate transcript summary and audio
+            ai_result = self.ai_processor.generate_transcript_summary(video_id, title)
+            
+            if ai_result.get('summary'):
+                logger.info(f"Successfully generated AI summary for {video_id}")
+                logger.info(f"Summary preview: {ai_result['summary'][:100]}...")
+                if ai_result.get('audio_url'):
+                    logger.info(f"Audio generated: {ai_result['audio_url']}")
+                
+                # Save to database
+                self.save_ai_result(video_id, ai_result)
+                return True
+            else:
+                logger.warning(f"Failed to generate AI summary for {video_id}: {ai_result.get('error')}")
+                return False
+                
+        except Exception as e:
+            logger.error(f"Error generating AI for video {video_id}: {e}", exc_info=True)
+            return False
+    
+    def save_ai_result(self, video_id, ai_result):
+        """Save AI analysis result to database"""
+        try:
+            with psycopg2.connect(self.database_url) as conn:
+                with conn.cursor() as cur:
+                    # Check if analysis exists
+                    cur.execute("""
+                        SELECT id FROM video_analyses 
+                        WHERE youtube_url LIKE %s
+                    """, (f"%{video_id}%",))
+                    
+                    existing = cur.fetchone()
+                    
+                    if existing:
+                        # Update existing
+                        cur.execute("""
+                            UPDATE video_analyses
+                            SET result = %s,
+                                audio_url = %s,
+                                status = 'COMPLETED',
+                                updated_at = NOW()
+                            WHERE youtube_url LIKE %s
+                        """, (ai_result['summary'], ai_result.get('audio_url'), f"%{video_id}%"))
+                    else:
+                        # Insert new
+                        cur.execute("""
+                            INSERT INTO video_analyses (youtube_url, result, audio_url, status, created_at, updated_at)
+                            VALUES (%s, %s, %s, 'COMPLETED', NOW(), NOW())
+                        """, (f"https://youtube.com/watch?v={video_id}", ai_result['summary'], ai_result.get('audio_url')))
+                    
+                    conn.commit()
+                    logger.info(f"Saved AI analysis for {video_id}")
+                    
+        except Exception as e:
+            logger.error(f"Error saving AI result: {e}", exc_info=True)
+    
+    def run(self):
+        """Run AI generation for the video of the day"""
+        logger.info("Starting AI generation for Video of the Day...")
+        
+        # Get current video of the day
+        video = self.get_current_video_of_day()
+        
+        if not video:
+            logger.info("No video of the day found for today")
+            return False
+        
+        logger.info(f"Found Video of the Day: {video['title']} ({video['video_id']})")
+        
+        # Check if AI already exists
+        if video['analysis_status'] == 'COMPLETED' and video['audio_url']:
+            logger.info("Video of the Day already has completed AI analysis with audio")
+            return True
+        
+        # Generate AI
+        success = self.generate_ai_for_video(video['video_id'], video['title'])
+        
+        if success:
+            logger.info("AI generation completed successfully for Video of the Day")
+        else:
+            logger.error("Failed to generate AI for Video of the Day")
+        
+        return success
+
+if __name__ == "__main__":
+    runner = AIVideoOfDayRunner()
+    runner.run()
