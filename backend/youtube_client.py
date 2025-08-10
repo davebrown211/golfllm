@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 import googleapiclient.discovery
 from googleapiclient.errors import HttpError
 import re
-from golf_whitelist import WHITELISTED_CHANNELS
+# Whitelist handling moved to database level - no longer needed here
 
 logger = logging.getLogger(__name__)
 
@@ -23,8 +23,7 @@ class YouTubeClient:
             'youtube', 'v3', developerKey=api_key
         )
         
-        # Import whitelisted channels from centralized file and normalize to IDs
-        self.whitelisted_channels = self.normalize_channel_list(WHITELISTED_CHANNELS)
+        # Whitelist filtering now handled at database query level
     
     def parse_duration(self, duration: str) -> int:
         """Parse ISO 8601 duration to seconds (matches Next.js logic)"""

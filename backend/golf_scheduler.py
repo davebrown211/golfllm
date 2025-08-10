@@ -23,7 +23,7 @@ import schedule
 import json
 from dataclasses import dataclass
 from dotenv import load_dotenv
-from golf_whitelist import WHITELISTED_CHANNELS
+# Whitelist now handled via database JOINs - no imports needed
 
 # Local imports
 from youtube_client import YouTubeClient
@@ -158,35 +158,8 @@ class GolfScheduler:
         self.daily_quota_limit = 10000
         self.quota_reserve_percentage = 0.2  # Reserve 20% for essential operations
         
-        # Import whitelisted channels from centralized file and normalize to IDs
-        logger.info(f"Raw whitelist loaded: {len(WHITELISTED_CHANNELS)} entries")
-        
-        # Load instructional whitelist
-        from golf_whitelist import get_channel_info
-        instructional_channels = []
-        try:
-            # Load instructional whitelist from JSON
-            import json
-            json_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'instructional_whitelist.json')
-            with open(json_path, 'r') as f:
-                instructional_data = json.load(f)
-            
-            for channel in instructional_data['channels']:
-                if channel.get('id'):
-                    instructional_channels.append(channel['id'])
-                if channel.get('handle'):
-                    instructional_channels.append(channel['handle'])
-                    
-            logger.info(f"Instructional whitelist loaded: {len(instructional_channels)} entries")
-        except Exception as e:
-            logger.warning(f"Could not load instructional whitelist: {e}")
-        
-        # Combine both whitelists
-        all_channels = WHITELISTED_CHANNELS + instructional_channels
-        logger.info(f"Combined whitelist: {len(all_channels)} entries total")
-        
-        self.whitelisted_channels = self.youtube_client.normalize_channel_list(all_channels)
-        logger.info(f"Normalized channels: {len(self.whitelisted_channels)} entries")
+        # Whitelist is now handled via database JOINs - no need to load arrays
+        logger.info("Using database-driven whitelist via JOINs")
         
         logger.info("Golf Scheduler initialized")
     
@@ -300,14 +273,15 @@ class GolfScheduler:
         try:
             with self.db_manager.get_connection() as conn:
                 with conn.cursor() as cur:
-                    # Exact SQL from Next.js scheduler (matches user-facing video selection)
+                    # Database-driven whitelist selection (matches frontend logic)
                     query = """
                     WITH user_facing_videos AS (
                         -- Curated videos (priority 1)
                         (SELECT yv.id, yv.updated_at, yv.published_at, yv.view_count, 1 as priority
                          FROM youtube_videos yv 
                          JOIN youtube_channels yc ON yv.channel_id = yc.id
-                         WHERE yv.channel_id = ANY(%s::text[])
+                         JOIN whitelisted_channels wc ON yv.channel_id = wc.channel_id
+                         WHERE wc.active = true
                            AND yv.published_at >= NOW() - INTERVAL '90 days'
                            AND yv.view_count > 100
                            AND yv.duration_seconds >= 180
@@ -319,9 +293,10 @@ class GolfScheduler:
                         (SELECT yv.id, yv.updated_at, yv.published_at, yv.view_count, 2 as priority
                          FROM youtube_videos yv
                          JOIN youtube_channels yc ON yv.channel_id = yc.id
-                         WHERE yv.published_at >= NOW() - INTERVAL '14 days'
+                         JOIN whitelisted_channels wc ON yv.channel_id = wc.channel_id
+                         WHERE wc.active = true
+                           AND yv.published_at >= NOW() - INTERVAL '14 days'
                            AND yv.view_count > 100
-                           AND yv.channel_id = ANY(%s::text[])
                            AND yv.duration_seconds >= 60
                            AND yv.thumbnail_url IS NOT NULL
                          ORDER BY 
@@ -340,7 +315,7 @@ class GolfScheduler:
                     LIMIT 70
                     """
                     
-                    cur.execute(query, (self.whitelisted_channels, self.whitelisted_channels))
+                    cur.execute(query)
                     video_ids = [row[0] for row in cur.fetchall()]
                     
                     if not video_ids:
@@ -481,7 +456,7 @@ class GolfScheduler:
                             AND (yv.engagement_rate > 0.1 OR yv.engagement_rate IS NULL)  -- Allow null engagement for recent videos
                             AND yv.thumbnail_url IS NOT NULL                  -- Must have thumbnail
                             AND (yv.duration_seconds IS NULL OR yv.duration_seconds > 60)  -- Exclude shorts
-                            AND yv.channel_id = ANY(%s::text[])               -- Only whitelisted creators
+                            AND EXISTS (SELECT 1 FROM whitelisted_channels wc WHERE wc.channel_id = yv.channel_id AND wc.active = true)  -- Only whitelisted creators
                             AND yv.title !~ '[あ-ん]'  -- Exclude Japanese hiragana
                             AND yv.title !~ '[ア-ン]'  -- Exclude Japanese katakana
                             AND yv.title !~ '[一-龯]'  -- Exclude Chinese/Japanese kanji
@@ -503,17 +478,9 @@ class GolfScheduler:
                         ORDER BY momentum_score DESC, view_velocity DESC, engagement_rate DESC
                         LIMIT 1
                     """
+                    # Query now uses database JOIN - no parameter filtering needed
                     
-                    # Filter to only channel IDs (not handles)
-                    channel_ids = [ch for ch in self.whitelisted_channels if not ch.startswith('@') and ch]
-                    
-                    if not channel_ids:
-                        logger.warning("No valid channel IDs found in whitelist")
-                        return None
-                    
-                    logger.debug(f"Using {len(channel_ids)} channel IDs for video of day query")
-                    
-                    cur.execute(query, (channel_ids,))
+                    cur.execute(query)
                     row = cur.fetchone()
                     
                     if not row:
@@ -591,7 +558,13 @@ class GolfScheduler:
                 days_back = 7  # Look for videos from past week
                 max_videos_per_channel = 5
                 
-                for channel_id in self.whitelisted_channels:
+                # Get active whitelisted channels from database
+                with self.db_manager.get_connection() as conn:
+                    with conn.cursor() as cur:
+                        cur.execute("SELECT channel_id FROM whitelisted_channels WHERE active = true")
+                        channel_ids = [row[0] for row in cur.fetchall()]
+                
+                for channel_id in channel_ids:
                     try:
                         # Get channel's upload playlist
                         channel_videos = self.youtube_client.get_channel_recent_videos(
@@ -648,11 +621,12 @@ class GolfScheduler:
         try:
             with self.db_manager.get_connection() as conn:
                 with conn.cursor() as cur:
-                    # Exact SQL from Next.js scheduler
+                    # Database-driven maintenance query  
                     query = """
                     SELECT yv.id FROM youtube_videos yv
-                    JOIN youtube_channels yc ON yv.channel_id = yc.id  
-                    WHERE yv.channel_id = ANY(%s::text[])
+                    JOIN youtube_channels yc ON yv.channel_id = yc.id
+                    JOIN whitelisted_channels wc ON yv.channel_id = wc.channel_id  
+                    WHERE wc.active = true
                       AND yv.published_at < NOW() - INTERVAL '90 days'
                       AND yv.view_count > 500000
                       AND yv.updated_at < NOW() - INTERVAL '7 days'
@@ -660,7 +634,7 @@ class GolfScheduler:
                     LIMIT 100
                     """
                     
-                    cur.execute(query, (self.whitelisted_channels,))
+                    cur.execute(query)
                     video_ids = [row[0] for row in cur.fetchall()]
                     
                     if not video_ids:

@@ -35,7 +35,7 @@ WITH trending_candidates AS (
     AND (yv.engagement_rate > 0.1 OR yv.engagement_rate IS NULL)
     AND yv.thumbnail_url IS NOT NULL
     AND (yv.duration_seconds IS NULL OR yv.duration_seconds >= 120)
-    AND yv.channel_id = ANY($1::text[])
+    AND yv.channel_id IN (SELECT channel_id FROM whitelisted_channels WHERE active = true)
     AND yv.title !~ '[あ-ん]'  -- Exclude Japanese hiragana
     AND yv.title !~ '[ア-ン]'  -- Exclude Japanese katakana
     AND yv.title !~ '[一-龯]'  -- Exclude Chinese/Japanese kanji

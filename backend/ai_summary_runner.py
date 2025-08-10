@@ -14,8 +14,7 @@ from dotenv import load_dotenv
 from ai_processor import AIProcessor
 import time
 
-# Import the whitelist
-from golf_whitelist import WHITELISTED_CHANNELS
+# Whitelist now handled via database JOINs - no imports needed
 
 # Configure logging
 logging.basicConfig(
@@ -38,53 +37,46 @@ class AISummaryRunner:
         
         self.ai_processor = AIProcessor(google_api_key, elevenlabs_api_key)
         
-        # Load whitelisted channel IDs (filter out handles)
-        self.whitelisted_channel_ids = set()
+        logger.info("AI Summary Runner initialized with database-driven whitelist")
         
-        for channel in WHITELISTED_CHANNELS:
-            if isinstance(channel, str) and not channel.startswith('@'):
-                self.whitelisted_channel_ids.add(channel)
-        
-        logger.info(f"Loaded {len(self.whitelisted_channel_ids)} whitelisted channel IDs")
-        
-    def get_videos_needing_ai(self, limit=10):
-        """Get videos that need AI summaries generated"""
+    def get_video_of_the_day_needing_ai(self):
+        """Get current Video of the Day if it needs AI analysis"""
         try:
+            # Load shared query 
+            shared_query_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'shared', 'video-of-the-day-query.sql')
+            with open(shared_query_path, 'r') as f:
+                query = f.read().strip()
+            
             with psycopg2.connect(self.database_url) as conn:
                 with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
-                    query = """
-                    SELECT 
-                        yv.id as video_id,
-                        yv.title,
-                        yc.title as channel,
-                        yv.channel_id
-                    FROM youtube_videos yv
-                    JOIN youtube_channels yc ON yv.channel_id = yc.id
-                    LEFT JOIN video_analyses va ON va.youtube_url LIKE '%%' || yv.id || '%%'
-                    WHERE yv.published_at >= NOW() - INTERVAL '7 days'  -- Recent videos
-                        AND yv.view_count > 1000  -- Some engagement
-                        AND (yv.duration_seconds IS NULL OR yv.duration_seconds >= 120)  -- Not shorts
-                        AND yv.thumbnail_url IS NOT NULL
-                        AND (va.id IS NULL OR va.status != 'COMPLETED')  -- No completed analysis
-                    ORDER BY yv.view_count DESC
-                    LIMIT %s
-                    """
+                    cur.execute(query)
+                    row = cur.fetchone()
                     
-                    cur.execute(query, (limit * 3,))  # Get more to filter by whitelist
-                    videos = cur.fetchall()
+                    if not row:
+                        logger.info("No Video of the Day found")
+                        return []
                     
-                    # Filter by whitelist
-                    whitelisted_videos = []
-                    for video in videos:
-                        if video['channel_id'] in self.whitelisted_channel_ids:
-                            whitelisted_videos.append(video)
-                            if len(whitelisted_videos) >= limit:
-                                break
+                    # Check if this video already has AI analysis
+                    cur.execute("""
+                        SELECT status FROM video_analyses 
+                        WHERE youtube_url LIKE %s AND status = 'COMPLETED'
+                    """, (f"%{row['video_id']}%",))
                     
-                    return whitelisted_videos
+                    existing = cur.fetchone()
+                    if existing:
+                        logger.info(f"Video of the Day already has completed AI analysis: {row['title']}")
+                        return []
+                    
+                    # Return as list for compatibility with existing code
+                    return [{
+                        'video_id': row['video_id'],
+                        'title': row['title'],
+                        'channel': row['channel'],
+                        'channel_id': None  # Not needed for AI processing
+                    }]
                     
         except Exception as e:
-            logger.error(f"Error getting videos needing AI: {e}", exc_info=True)
+            logger.error(f"Error getting Video of the Day: {e}", exc_info=True)
             return []
     
     def generate_ai_for_video(self, video_id, title):
@@ -149,16 +141,16 @@ class AISummaryRunner:
             logger.error(f"Error saving AI result: {e}", exc_info=True)
     
     def run_once(self, max_videos=5):
-        """Run AI generation for a batch of videos"""
-        logger.info(f"Starting AI summary generation for up to {max_videos} videos...")
+        """Run AI generation for Video of the Day if needed"""
+        logger.info("Starting AI summary generation for Video of the Day...")
         
-        videos = self.get_videos_needing_ai(max_videos)
+        videos = self.get_video_of_the_day_needing_ai()
         
         if not videos:
-            logger.info("No videos found needing AI summaries")
+            logger.info("Video of the Day doesn't need AI analysis or no Video of the Day found")
             return 0
         
-        logger.info(f"Found {len(videos)} videos needing AI summaries")
+        logger.info(f"Video of the Day needs AI analysis: {videos[0]['title']}")
         
         successful = 0
         for video in videos:
@@ -170,11 +162,8 @@ class AISummaryRunner:
                 if success:
                     successful += 1
                 
-                # Small delay to avoid rate limiting
-                time.sleep(2)
-                
             except Exception as e:
-                logger.error(f"Error processing video {video['video_id']}: {e}")
+                logger.error(f"Error processing Video of the Day {video['video_id']}: {e}")
                 continue
         
         logger.info(f"AI summary generation completed. Successfully processed {successful}/{len(videos)} videos")

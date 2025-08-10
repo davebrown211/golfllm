@@ -6,8 +6,6 @@ export const revalidate = 60 // Revalidate every 60 seconds
 async function getCuratedVideos(offset: number = 0, limit: number = 200) {
   const client = await pool.connect()
   try {
-    const { WHITELISTED_CHANNEL_IDS } = await import('@/lib/content-whitelist')
-    
     const query = `
       SELECT 
         ROW_NUMBER() OVER (ORDER BY yv.published_at DESC) as rank,
@@ -21,7 +19,9 @@ async function getCuratedVideos(offset: number = 0, limit: number = 200) {
         yv.thumbnail_url as thumbnail
       FROM youtube_videos yv
       JOIN youtube_channels yc ON yv.channel_id = yc.id
-      WHERE yv.channel_id = ANY($3::text[])
+      JOIN whitelisted_channels wc ON yv.channel_id = wc.channel_id
+      WHERE wc.channel_type = 'regular' 
+        AND wc.active = true
         AND yv.published_at >= NOW() - INTERVAL '14 days'
         AND yv.engagement_rate >= 1.0
         AND (yv.duration_seconds IS NULL OR yv.duration_seconds >= 120)
@@ -29,7 +29,7 @@ async function getCuratedVideos(offset: number = 0, limit: number = 200) {
       LIMIT $1 OFFSET $2
     `
     
-    const result = await client.query(query, [limit, offset, WHITELISTED_CHANNEL_IDS])
+    const result = await client.query(query, [limit, offset])
     return result.rows
   } finally {
     client.release()
@@ -39,12 +39,6 @@ async function getCuratedVideos(offset: number = 0, limit: number = 200) {
 async function getDiscoveryVideos(offset: number = 0, limit: number = 200) {
   const client = await pool.connect()
   try {
-    const { WHITELISTED_CHANNEL_IDS } = await import('@/lib/content-whitelist')
-    const { INSTRUCTIONAL_CHANNEL_IDS } = await import('@/lib/instructional-content-whitelist')
-    
-    // Combine both whitelists to exclude - filter out empty values
-    const allWhitelistedIds = [...WHITELISTED_CHANNEL_IDS, ...INSTRUCTIONAL_CHANNEL_IDS].filter(id => id && id.trim())
-    
     const query = `
       SELECT 
         ROW_NUMBER() OVER (ORDER BY yv.published_at DESC) as rank,
@@ -63,12 +57,15 @@ async function getDiscoveryVideos(offset: number = 0, limit: number = 200) {
         AND yv.engagement_rate >= 2.0
         AND yv.view_count >= 5000
         AND (yv.duration_seconds IS NULL OR yv.duration_seconds >= 120)
-        AND NOT (yv.channel_id = ANY($3::text[]))
+        AND NOT EXISTS (
+          SELECT 1 FROM whitelisted_channels wc 
+          WHERE wc.channel_id = yv.channel_id AND wc.active = true
+        )
       ORDER BY yv.published_at DESC
       LIMIT $1 OFFSET $2
     `
     
-    const result = await client.query(query, [limit, offset, allWhitelistedIds])
+    const result = await client.query(query, [limit, offset])
     return result.rows
   } finally {
     client.release()
@@ -78,8 +75,6 @@ async function getDiscoveryVideos(offset: number = 0, limit: number = 200) {
 async function getInstructionalVideos(offset: number = 0, limit: number = 200) {
   const client = await pool.connect()
   try {
-    const { INSTRUCTIONAL_CHANNEL_IDS } = await import('@/lib/instructional-content-whitelist')
-    
     const query = `
       SELECT 
         ROW_NUMBER() OVER (ORDER BY yv.published_at DESC) as rank,
@@ -93,7 +88,9 @@ async function getInstructionalVideos(offset: number = 0, limit: number = 200) {
         yv.thumbnail_url as thumbnail
       FROM youtube_videos yv
       JOIN youtube_channels yc ON yv.channel_id = yc.id
-      WHERE yv.channel_id = ANY($3::text[])
+      JOIN whitelisted_channels wc ON yv.channel_id = wc.channel_id
+      WHERE wc.channel_type = 'instructional'
+        AND wc.active = true
         AND yv.published_at >= NOW() - INTERVAL '14 days'
         AND yv.engagement_rate >= 0.5
         AND (yv.duration_seconds IS NULL OR yv.duration_seconds >= 120)
@@ -101,7 +98,7 @@ async function getInstructionalVideos(offset: number = 0, limit: number = 200) {
       LIMIT $1 OFFSET $2
     `
     
-    const result = await client.query(query, [limit, offset, INSTRUCTIONAL_CHANNEL_IDS])
+    const result = await client.query(query, [limit, offset])
     return result.rows
   } finally {
     client.release()
@@ -177,12 +174,11 @@ async function getVideosWithAudio() {
 async function getVideoOfTheDay() {
   const client = await pool.connect()
   try {
-    const { WHITELISTED_CHANNEL_IDS } = await import('@/lib/content-whitelist')
     const { getVideoOfTheDayQuery } = require('../lib/video-of-the-day-query')
     
     const query = getVideoOfTheDayQuery()
     
-    const result = await client.query(query, [WHITELISTED_CHANNEL_IDS])
+    const result = await client.query(query)
     
     if (result.rows.length === 0) {
       return null

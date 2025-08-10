@@ -6,6 +6,10 @@ from typing import Dict, List, Optional
 from datetime import datetime
 import json
 import os
+import psycopg2
+from dotenv import load_dotenv
+
+load_dotenv()
 
 class XPostTemplates:
     
@@ -168,19 +172,27 @@ Shop now: [CLOTHING_STORE_LINK]
     
     @staticmethod
     def get_creator_x_handle(creator_name: str) -> Optional[str]:
-        """Get X handle for a creator from whitelist"""
+        """Get X handle for a creator from database"""
         try:
-            whitelist_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'whitelist.json')
-            with open(whitelist_path, 'r') as f:
-                data = json.load(f)
-            
-            for channel in data['channels']:
-                if channel['name'].lower() == creator_name.lower():
-                    return channel.get('x_handle')
-            
-            return None
+            database_url = os.getenv('DATABASE_URL')
+            if not database_url:
+                print("DATABASE_URL not found in environment")
+                return None
+                
+            with psycopg2.connect(database_url) as conn:
+                with conn.cursor() as cur:
+                    cur.execute("""
+                        SELECT x_handle FROM whitelisted_channels 
+                        WHERE LOWER(name) = LOWER(%s) 
+                        AND x_handle IS NOT NULL
+                        AND active = true
+                    """, (creator_name,))
+                    
+                    result = cur.fetchone()
+                    return result[0] if result else None
+                    
         except Exception as e:
-            print(f"Error getting X handle: {e}")
+            print(f"Error getting X handle from database: {e}")
             return None
 
 # Post scheduling recommendations
