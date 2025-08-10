@@ -12,6 +12,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Exception: only commit/push if the user explicitly asks you to do so.
 
+## PRODUCTION CODE CHANGES - STRICT RULES
+
+**NEVER edit production code files directly.** Always follow this workflow:
+1. Make changes in local development environment
+2. Test changes locally
+3. Commit changes to git
+4. Push to repository  
+5. Deploy through proper deployment process
+
+**Production servers are READ-ONLY for code changes.**
+
+Exception: Only configuration files (like .env) or data migrations are allowed to be modified directly on production.
+
 ## Project Overview
 
 This is a golf video directory application with a Python backend scheduler and Next.js frontend. The system collects, analyzes, and curates golf videos from YouTube using AI-powered content analysis.

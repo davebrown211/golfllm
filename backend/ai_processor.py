@@ -317,7 +317,7 @@ IMPORTANT: Write directly in the commentator's voice. Do NOT include tone descri
         try:
             # Use local path for development, production path for server
             if os.path.exists("/opt/golf-directory"):
-                audio_dir = "/opt/golf-directory/audio"
+                audio_dir = "/root/golfllm/frontend/golf-directory/public/audio"
             else:
                 # Local development path
                 audio_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "frontend", "golf-directory", "public", "audio")
