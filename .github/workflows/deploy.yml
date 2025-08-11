@@ -24,6 +24,22 @@ jobs:
           # Pull latest changes
           git pull origin master
           
+          # Run database migrations
+          cd /root/golfllm/scripts
+          echo "Running migration scanner..."
+          if ! python3 migration-scanner.py; then
+            echo "❌ Migration scanner failed"
+            exit 1
+          fi
+          
+          echo "Running migration runner..."
+          if ! python3 migration-runner.py; then
+            echo "❌ Migration runner failed"
+            exit 1
+          fi
+          
+          echo "✅ Database migrations completed successfully"
+          
           # Update systemd service files
           sudo cp systemd/*.service /etc/systemd/system/
           sudo systemctl daemon-reload

@@ -20,6 +20,7 @@ WITH trending_candidates AS (
     va.audio_url,
     va.status as analysis_status,
     CASE 
+      WHEN vo.video_id IS NOT NULL THEN yv.view_count * 10000
       WHEN yv.published_at >= CURRENT_DATE THEN yv.view_count * 5000
       WHEN yv.published_at >= NOW() - '1 day'::interval THEN yv.view_count * 100
       WHEN yv.published_at >= NOW() - '2 day'::interval THEN yv.view_count * 10
@@ -30,6 +31,9 @@ WITH trending_candidates AS (
   JOIN youtube_channels yc ON yv.channel_id = yc.id
   LEFT JOIN video_analyses va ON va.youtube_url LIKE '%' || yv.id || '%'
     AND va.status = 'COMPLETED'
+  LEFT JOIN video_overrides vo ON vo.video_id = yv.id 
+    AND vo.override_date = CURRENT_DATE 
+    AND vo.active = true
   WHERE yv.published_at >= NOW() - '14 day'::interval
     AND yv.view_count > 100
     AND (yv.engagement_rate > 0.1 OR yv.engagement_rate IS NULL)
