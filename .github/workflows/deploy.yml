@@ -41,11 +41,13 @@ jobs:
           echo "✅ Database migrations completed successfully"
           
           # Update systemd service files
-          sudo cp systemd/*.service /etc/systemd/system/
+          if [ -d "/root/golfllm/systemd" ]; then
+            sudo cp /root/golfllm/systemd/*.service /etc/systemd/system/
+          fi
           sudo systemctl daemon-reload
           
           # Deploy frontend
-          cd frontend/golf-directory
+          cd /root/golfllm/frontend/golf-directory
           npm install
           npm run build
           
