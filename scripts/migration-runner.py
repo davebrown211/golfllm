@@ -22,11 +22,33 @@ load_dotenv()  # Try project root first
 load_dotenv(Path(__file__).parent.parent / "backend" / ".env")  # Try backend .env for local development
 load_dotenv(Path(__file__).parent.parent / "frontend" / "golf-directory" / ".env.local")  # Try frontend .env.local
 
-def get_pending_migrations(database_url: str) -> List[Tuple[int, str, str]]:
+def get_pending_migrations(database_url: str, migrations_path: Path) -> List[Tuple[int, str, str]]:
     """Get pending migrations ordered by created_date"""
     try:
         with psycopg2.connect(database_url) as conn:
             with conn.cursor() as cur:
+                # Check if migrations table exists
+                cur.execute("""
+                    SELECT EXISTS (
+                        SELECT FROM information_schema.tables 
+                        WHERE table_name = 'migrations'
+                    )
+                """)
+                table_exists = cur.fetchone()[0]
+                
+                if not table_exists:
+                    # Bootstrap case: migrations table doesn't exist
+                    # Check if 011_create_migrations_table.sql exists
+                    bootstrap_file = "011_create_migrations_table.sql"
+                    bootstrap_path = migrations_path / bootstrap_file
+                    if bootstrap_path.exists():
+                        logger.info("Migrations table doesn't exist - will bootstrap with 011_create_migrations_table.sql")
+                        # Return a fake entry for the bootstrap migration
+                        return [(0, bootstrap_file, 11)]
+                    else:
+                        logger.error(f"Migrations table doesn't exist and bootstrap file not found: {bootstrap_file}")
+                        raise Exception("Cannot bootstrap migration system")
+                
                 cur.execute("""
                     SELECT id, filename, migration_number
                     FROM migrations 
@@ -59,12 +81,16 @@ def execute_migration(database_url: str, migration_id: int, filename: str, sql_c
                 # Execute the migration SQL
                 cur.execute(sql_content)
                 
-                # Update migration status to completed
-                cur.execute("""
-                    UPDATE migrations 
-                    SET status = 'completed', applied_at = %s
-                    WHERE id = %s
-                """, (datetime.now(), migration_id))
+                # Only update migration status if this isn't the bootstrap migration
+                if migration_id != 0:  # 0 is our special bootstrap ID
+                    # Update migration status to completed
+                    cur.execute("""
+                        UPDATE migrations 
+                        SET status = 'completed', applied_at = %s
+                        WHERE id = %s
+                    """, (datetime.now(), migration_id))
+                else:
+                    logger.info("Bootstrap migration completed - migrations table now exists")
                 
                 conn.commit()
                 logger.info(f"✓ Migration completed successfully: {filename}")
@@ -104,7 +130,7 @@ def main():
         logger.info(f"Migrations directory: {migrations_path}")
         
         # Get pending migrations
-        pending_migrations = get_pending_migrations(database_url)
+        pending_migrations = get_pending_migrations(database_url, migrations_path)
         
         if not pending_migrations:
             logger.info("No pending migrations to execute")

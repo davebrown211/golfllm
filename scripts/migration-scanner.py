@@ -55,6 +55,19 @@ def get_existing_migrations(database_url: str) -> set:
     try:
         with psycopg2.connect(database_url) as conn:
             with conn.cursor() as cur:
+                # Check if migrations table exists
+                cur.execute("""
+                    SELECT EXISTS (
+                        SELECT FROM information_schema.tables 
+                        WHERE table_name = 'migrations'
+                    )
+                """)
+                table_exists = cur.fetchone()[0]
+                
+                if not table_exists:
+                    logger.info("Migrations table doesn't exist - will be created by first migration")
+                    return set()
+                
                 cur.execute("SELECT filename FROM migrations")
                 existing = {row[0] for row in cur.fetchall()}
                 logger.info(f"Found {len(existing)} existing migrations in database")
@@ -72,6 +85,20 @@ def insert_new_migrations(database_url: str, new_migrations: List[Tuple[str, int
     try:
         with psycopg2.connect(database_url) as conn:
             with conn.cursor() as cur:
+                # Check if migrations table exists before trying to insert
+                cur.execute("""
+                    SELECT EXISTS (
+                        SELECT FROM information_schema.tables 
+                        WHERE table_name = 'migrations'
+                    )
+                """)
+                table_exists = cur.fetchone()[0]
+                
+                if not table_exists:
+                    logger.info("Migrations table doesn't exist yet - skipping insertion")
+                    logger.info("The migration runner will create the table when it runs migration 011")
+                    return 0
+                
                 inserted_count = 0
                 for filename, migration_number in new_migrations:
                     try:
