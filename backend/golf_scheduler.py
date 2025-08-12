@@ -28,7 +28,7 @@ from dotenv import load_dotenv
 # Local imports
 from youtube_client import YouTubeClient
 from ai_processor import AIProcessor
-from ai_video_of_day_runner import AIVideoOfDayRunner
+from ai_summary_runner import AISummaryRunner
 
 # Load environment variables
 load_dotenv()
@@ -507,39 +507,23 @@ class GolfScheduler:
             return None
     
     def generate_ai_for_video_of_day(self):
-        """Generate AI analysis for video of the day if missing"""
+        """Generate AI analysis for video of the day if missing - uses shared VOD query"""
         try:
-            # Get video of the day directly from database
-            video_data = self.get_video_of_the_day()
+            # Use the AI summary runner which properly uses the shared VOD query
+            ai_runner = AISummaryRunner()
+            videos_needing_ai = ai_runner.get_video_of_the_day_needing_ai()
             
-            if not video_data:
-                logger.info("No video of the day found")
-                return
-            
-            video_id = video_data['video_id']
-            title = video_data['title']
-            
-            # Check if this video already has AI analysis
-            if video_data['has_ai_analysis']:
-                logger.info(f"Video of the day already has AI analysis: {title}")
+            if not videos_needing_ai:
+                logger.info("Video of the Day doesn't need AI analysis or no Video of the Day found")
                 return
                 
-            logger.info(f"Video of the day needs AI analysis: {title} ({video_id})")
-            
-            # Generate AI analysis
-            logger.info(f"Generating AI analysis for video of the day: {title} ({video_id})")
-            ai_result = self.ai_processor.generate_transcript_summary(video_id, title)
-            
-            if ai_result['summary']:
-                # Save to database
-                with self.db_manager.get_connection() as conn:
-                    self.db_manager.save_video_analysis(
-                        conn, video_id, ai_result['summary'], ai_result.get('audio_url')
-                    )
-                    conn.commit()
-                    logger.info("AI analysis saved successfully")
-            else:
-                logger.warning(f"AI analysis failed: {ai_result.get('error', 'Unknown error')}")
+            # Process the VOD that needs AI
+            for video_data in videos_needing_ai:
+                video_id = video_data['video_id']
+                title = video_data['title']
+                logger.info(f"Generating AI analysis for Video of the Day: {title} ({video_id})")
+                
+                ai_runner.process_video(video_data)
                     
         except Exception as e:
             logger.error(f"Error generating AI for video of the day: {e}")
