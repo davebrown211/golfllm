@@ -153,7 +153,6 @@ class GolfScheduler:
         # Initialize components
         self.youtube_client = YouTubeClient(youtube_api_key)
         self.ai_processor = AIProcessor(google_api_key, elevenlabs_api_key)
-        self.ai_video_runner = AIVideoOfDayRunner()
         self.db_manager = DatabaseManager(self.db_url)
         self.daily_quota_limit = 10000
         self.quota_reserve_percentage = 0.2  # Reserve 20% for essential operations
