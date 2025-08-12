@@ -123,7 +123,7 @@ def generate_vod_post(vod_data):
 
 {title}{creator_tag}
 {summary_snippet}
-🎧 View AI summary here: streamingrange.net
+🎧 AI audio summary: streamingrange.net
 📺 Watch: https://youtu.be/{vod_data['video_id']}
 
 #GolfContent #VideoOfTheDay #Golf"""
