@@ -522,7 +522,7 @@ class GolfScheduler:
                 title = video_data['title']
                 logger.info(f"Generating AI analysis for Video of the Day: {title} ({video_id})")
                 
-                ai_runner.process_video(video_data)
+                ai_runner.generate_ai_for_video(video_id, title)
                     
         except Exception as e:
             logger.error(f"Error generating AI for video of the day: {e}")
