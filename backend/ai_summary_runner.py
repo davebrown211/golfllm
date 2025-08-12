@@ -128,11 +128,11 @@ class AISummaryRunner:
                             WHERE youtube_url LIKE %s
                         """, (ai_result['summary'], ai_result.get('audio_url'), f"%{video_id}%"))
                     else:
-                        # Insert new
+                        # Insert new - include video_id to satisfy NOT NULL constraint
                         cur.execute("""
-                            INSERT INTO video_analyses (youtube_url, result, audio_url, status, created_at, updated_at)
-                            VALUES (%s, %s, %s, 'COMPLETED', NOW(), NOW())
-                        """, (f"https://youtube.com/watch?v={video_id}", ai_result['summary'], ai_result.get('audio_url')))
+                            INSERT INTO video_analyses (video_id, youtube_url, result, audio_url, status, created_at, updated_at)
+                            VALUES (%s, %s, %s, %s, 'COMPLETED', NOW(), NOW())
+                        """, (video_id, f"https://youtube.com/watch?v={video_id}", ai_result['summary'], ai_result.get('audio_url')))
                     
                     conn.commit()
                     logger.info(f"Saved AI analysis for {video_id}")
