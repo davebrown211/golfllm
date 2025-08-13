@@ -99,6 +99,7 @@ def format_duration(seconds):
 
 def generate_vod_post(vod_data):
     """Generate X post for Video of the Day"""
+    import random
     
     # Get creator X handle if available
     x_handle = get_creator_x_handle(vod_data['channel_name'])
@@ -106,27 +107,74 @@ def generate_vod_post(vod_data):
     
     # Truncate title if too long
     title = vod_data['title']
-    if len(title) > 100:
-        title = title[:97] + "..."
+    if len(title) > 90:
+        title = title[:87] + "..."
     
-    # Get AI summary snippet if available
-    summary_snippet = ""
+    # Engaging hooks (random selection)
+    hooks = [
+        "This is why I love golf content 👇",
+        "Found something good today 🎯", 
+        "Golf Twitter, thoughts on this? 👀",
+        "This caught my attention 🔥",
+        "Weekend golf vibes incoming 🏌️‍♂️",
+        "Your next golf rabbit hole 👇",
+        "Golf content that actually delivers 💯"
+    ]
+    
+    # Engaging questions (random selection)
+    questions = [
+        "What's your biggest takeaway from this?",
+        "Anyone else struggle with this?",
+        "Thoughts on this approach?", 
+        "Who else needs to see this?",
+        "Is this your experience too?",
+        "What would you do differently?",
+        "Does this change how you think about golf?"
+    ]
+    
+    # Random selections
+    hook = random.choice(hooks)
+    question = random.choice(questions)
+    
+    # Get AI summary snippet for context
+    context = ""
     if vod_data.get('ai_summary') and isinstance(vod_data['ai_summary'], str):
-        # Extract first sentence or 100 chars
         summary = vod_data['ai_summary']
-        if len(summary) > 150:
-            summary = summary[:147] + "..."
-        summary_snippet = f"\n{summary}\n"
+        # Extract most interesting part (look for specific examples)
+        sentences = summary.split('.')
+        for sentence in sentences:
+            if any(word in sentence.lower() for word in ['hole', 'shot', 'yards', 'putt', 'fairway', 'green']):
+                if len(sentence.strip()) > 20:
+                    context = sentence.strip()[:120] + "..."
+                    break
+        if not context and len(summary) > 50:
+            context = summary[:117] + "..."
     
-    # Build the post
-    post = f"""🏌️ VIDEO OF THE DAY 🏌️
+    # Build the post with personality
+    if context:
+        post = f"""{hook}
 
 {title}{creator_tag}
-{summary_snippet}
-🎧 AI audio summary: streamingrange.net
-📺 Watch: https://youtu.be/{vod_data['video_id']}
 
-#GolfContent #VideoOfTheDay #Golf"""
+{context}
+
+{question}
+
+🎧 AI breakdown: streamingrange.net
+📺 youtu.be/{vod_data['video_id']}
+
+#Golf #GolfTips #GolfContent"""
+    else:
+        post = f"""{hook}
+
+{title}{creator_tag}
+
+{question}
+
+🎧 AI breakdown: streamingrange.net  
+📺 youtu.be/{vod_data['video_id']}
+
+#Golf #GolfTips #GolfContent"""
     
     return post
 
