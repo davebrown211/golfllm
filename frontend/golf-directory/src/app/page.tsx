@@ -105,6 +105,38 @@ async function getInstructionalVideos(offset: number = 0, limit: number = 200) {
   }
 }
 
+async function getProfessionalVideos(offset: number = 0, limit: number = 200) {
+  const client = await pool.connect()
+  try {
+    const query = `
+      SELECT 
+        ROW_NUMBER() OVER (ORDER BY yv.published_at DESC) as rank,
+        yv.title,
+        yc.title as channel,
+        yv.view_count::text as views,
+        yv.like_count::text as likes,
+        CONCAT(ROUND(CAST(yv.engagement_rate AS numeric), 2), '%') as engagement,
+        yv.published_at::text as published,
+        CONCAT('https://youtube.com/watch?v=', yv.id) as url,
+        yv.thumbnail_url as thumbnail
+      FROM youtube_videos yv
+      JOIN youtube_channels yc ON yv.channel_id = yc.id
+      JOIN whitelisted_channels wc ON yv.channel_id = wc.channel_id
+      WHERE wc.channel_type = 'professional'
+        AND wc.active = true
+        AND yv.published_at >= NOW() - INTERVAL '7 days'
+        AND (yv.duration_seconds IS NULL OR yv.duration_seconds >= 60)
+      ORDER BY yv.published_at DESC
+      LIMIT $1 OFFSET $2
+    `
+    
+    const result = await client.query(query, [limit, offset])
+    return result.rows
+  } finally {
+    client.release()
+  }
+}
+
 async function getStats() {
   const client = await pool.connect()
   try {
@@ -256,9 +288,10 @@ function generateSummaryFromAnalysis(analysis: {
 }
 
 export default async function Home() {
-  const [curatedVideos, instructionalVideos, discoveryVideos, stats, videosWithAudio, videoOfTheDay] = await Promise.all([
+  const [curatedVideos, instructionalVideos, professionalVideos, discoveryVideos, stats, videosWithAudio, videoOfTheDay] = await Promise.all([
     getCuratedVideos(),
     getInstructionalVideos(),
+    getProfessionalVideos(),
     getDiscoveryVideos(),
     getStats(),
     getVideosWithAudio(),
@@ -269,6 +302,7 @@ export default async function Home() {
     <HomePage 
       initialCuratedVideos={curatedVideos}
       initialInstructionalVideos={instructionalVideos}
+      initialProfessionalVideos={professionalVideos}
       initialDiscoveryVideos={discoveryVideos}
       initialStats={stats}
       initialVideosWithAudio={videosWithAudio}

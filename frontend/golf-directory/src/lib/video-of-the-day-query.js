@@ -6,10 +6,10 @@
 const fs = require('fs');
 const path = require('path');
 
-// Read the SQL query from file
+// Read the SQL query from shared file (single source of truth)
 const getVideoOfTheDayQuery = () => {
-  // In Next.js, we need to resolve the path relative to the project root
-  const queryPath = path.join(process.cwd(), 'src/lib/video-of-the-day-query.sql');
+  // Use the shared query file that both frontend and backend use
+  const queryPath = path.join(process.cwd(), '..', '..', 'shared', 'video-of-the-day-query.sql');
   return fs.readFileSync(queryPath, 'utf8');
 };
 

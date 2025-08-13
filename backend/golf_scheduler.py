@@ -568,31 +568,8 @@ class GolfScheduler:
         """Generate AI summary and audio for current Video of the Day if not already done"""
         logger.info("Starting AI Video of the Day generation task...")
         try:
-            # Get current video of the day
-            video = self.ai_video_runner.get_current_video_of_day()
-            
-            if not video:
-                logger.info("No video of the day found")
-                return
-            
-            logger.info(f"Video of the Day: {video['title']} ({video['video_id']})")
-            
-            # Check if it already has audio
-            with self.db_manager.get_connection() as conn:
-                with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
-                    cur.execute("""
-                        SELECT audio_url FROM video_analyses 
-                        WHERE video_id = %s AND audio_url IS NOT NULL
-                    """, (video['video_id'],))
-                    existing = cur.fetchone()
-                    
-                    if existing:
-                        logger.info(f"Video {video['video_id']} already has audio, skipping")
-                        return
-            
-            logger.info(f"Generating AI content for {video['video_id']}")
-            # Generate AI content
-            self.ai_video_runner.generate_ai_for_video(video['video_id'], video['title'])
+            # Use the existing generate_ai_for_video_of_day method
+            self.generate_ai_for_video_of_day()
             logger.info("AI Video of the Day generation completed")
             
         except Exception as e:

@@ -268,6 +268,7 @@ function CategorySection({
 interface HomePageProps {
   initialCuratedVideos: VideoRanking[];
   initialInstructionalVideos: VideoRanking[];
+  initialProfessionalVideos: VideoRanking[];
   initialDiscoveryVideos: VideoRanking[];
   initialStats: DirectoryStats;
   initialVideosWithAudio: any[];
@@ -277,6 +278,7 @@ interface HomePageProps {
 export default function HomePage({
   initialCuratedVideos,
   initialInstructionalVideos,
+  initialProfessionalVideos,
   initialDiscoveryVideos,
   initialStats,
   initialVideosWithAudio,
@@ -288,6 +290,9 @@ export default function HomePage({
   const [instructionalVideos, setInstructionalVideos] = useState<VideoRanking[]>(
     initialInstructionalVideos.slice(0, 3)
   );
+  const [professionalVideos, setProfessionalVideos] = useState<VideoRanking[]>(
+    initialProfessionalVideos.slice(0, 3)
+  );
   const [discoveryVideos, setDiscoveryVideos] = useState<VideoRanking[]>(
     initialDiscoveryVideos.slice(0, 3)
   );
@@ -296,6 +301,7 @@ export default function HomePage({
   );
   const [curatedOffset, setCuratedOffset] = useState(0);
   const [instructionalOffset, setInstructionalOffset] = useState(0);
+  const [professionalOffset, setProfessionalOffset] = useState(0);
   const [discoveryOffset, setDiscoveryOffset] = useState(0);
   const [refreshAnimating, setRefreshAnimating] = useState<string | null>(null);
   const [hasNavigated, setHasNavigated] = useState(false);
@@ -358,6 +364,30 @@ export default function HomePage({
           // Loop back to beginning
           setInstructionalVideos(allVideos.slice(0, 3));
           setInstructionalOffset(0);
+        }
+      } else if (section === "professional") {
+        let targetOffset = professionalOffset;
+
+        if (direction === "next") {
+          targetOffset = professionalOffset + 3;
+        } else if (direction === "previous" && professionalOffset >= 3) {
+          targetOffset = professionalOffset - 3;
+        } else if (direction === "reset") {
+          targetOffset = 0;
+          setRefreshAnimating(section);
+          setTimeout(() => setRefreshAnimating(null), 800);
+        }
+
+        const allVideos = initialProfessionalVideos;
+        const newVideos = allVideos.slice(targetOffset, targetOffset + 3);
+
+        if (newVideos.length > 0) {
+          setProfessionalVideos(newVideos);
+          setProfessionalOffset(targetOffset);
+        } else if (direction === "next" && targetOffset > 0) {
+          // Loop back to beginning
+          setProfessionalVideos(allVideos.slice(0, 3));
+          setProfessionalOffset(0);
         }
       } else if (section === "discovery") {
         let targetOffset = discoveryOffset;
@@ -468,20 +498,37 @@ export default function HomePage({
           hasNavigated={hasNavigated}
         />
 
-        {/* Discovery Content */}
+        {/* Professional Golf Content */}
         <CategorySection
-          title="title like '%golf%'"
-          videos={discoveryVideos}
-          onNext={() => navigateSection("discovery", "next")}
-          onPrevious={() => navigateSection("discovery", "previous")}
-          onReset={() => navigateSection("discovery", "reset")}
-          canGoPrevious={discoveryOffset > 0}
-          isLoading={refreshingSection === "discovery"}
-          currentPage={Math.floor(discoveryOffset / 3)}
-          sectionKey="discovery"
+          title="Professional Golf"
+          videos={professionalVideos}
+          onNext={() => navigateSection("professional", "next")}
+          onPrevious={() => navigateSection("professional", "previous")}
+          onReset={() => navigateSection("professional", "reset")}
+          canGoPrevious={professionalOffset > 0}
+          isLoading={refreshingSection === "professional"}
+          currentPage={Math.floor(professionalOffset / 3)}
+          sectionKey="professional"
           refreshAnimating={refreshAnimating}
           hasNavigated={hasNavigated}
         />
+
+        {/* Discovery Content - Only show in development */}
+        {process.env.NODE_ENV === 'development' && (
+          <CategorySection
+            title="title like '%golf%'"
+            videos={discoveryVideos}
+            onNext={() => navigateSection("discovery", "next")}
+            onPrevious={() => navigateSection("discovery", "previous")}
+            onReset={() => navigateSection("discovery", "reset")}
+            canGoPrevious={discoveryOffset > 0}
+            isLoading={refreshingSection === "discovery"}
+            currentPage={Math.floor(discoveryOffset / 3)}
+            sectionKey="discovery"
+            refreshAnimating={refreshAnimating}
+            hasNavigated={hasNavigated}
+          />
+        )}
       </div>
 
       {/* CSS for animations */}

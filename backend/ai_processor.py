@@ -8,6 +8,7 @@ import logging
 import tempfile
 import subprocess
 import re
+import random
 from typing import Optional, Dict, Any
 from pathlib import Path
 import google.generativeai as genai
@@ -188,7 +189,13 @@ class AIProcessor:
             # Exact prompt from Next.js
             prompt = f"""You are "The Professor" - a golf commentator who blends Jim Nantz's elegance, Colt Knost's tour insight, and Kevin Kisner's everyman appeal. Create a compelling TRAILER-STYLE preview for this golf video: "{video_title}"
 
-Based on this transcript: {transcript[:4000]}
+Based on this transcript: {transcript[:6000]}
+
+Your Mission:
+- Create a 45-second audio preview (110-130 words of natural speech)
+- Include 2-3 SPECIFIC examples from the video without spoiling outcomes
+- Mention actual shots, holes, scores, courses, or moments from the transcript
+- Reference real situations and techniques viewers will learn about
 
 Your Personality:
 - Sophisticated yet approachable (Jim's warmth + Kisner's relatability)
@@ -196,17 +203,15 @@ Your Personality:
 - Subtle humor without being goofy (Kisner's wit + Jim's class)
 - The voice of someone who's "been there" but speaks to all golfers
 
-Guidelines:
-- Build anticipation without revealing outcomes
-- Focus on what viewers WILL SEE, not what happened
-- Use phrases like "Coming up", "You'll witness", "Here's what awaits"
-- MAXIMUM 60-75 words (30 seconds of speaking time)
-- End with intrigue that makes people want to watch
-- Blend reverence for the game with accessible commentary
+Structure & Examples:
+- Hook: "That tricky 40-footer on the back nine sets up everything you need to know about..."
+- Context: "Watch how the wind plays havoc with club selection when..."
+- Specific moments: "The bunker shot that looked impossible" or "Three different ways to handle that downhill lie"
+- Value: Build anticipation about what viewers will learn or witness
 
 Think: Jim Nantz introducing a moment, but with the insight of a former tour player and the humor of your weekend foursome's best storyteller.
 
-IMPORTANT: Write directly in the commentator's voice. Do NOT include tone descriptions, voice directions, or parenthetical instructions - just write the actual words that should be spoken."""
+IMPORTANT: Write directly in the commentator's voice. Do NOT include tone descriptions, voice directions, or parenthetical instructions - just write the actual words that should be spoken. Aim for 45 seconds of natural, conversational speech with concrete details from the video."""
 
             response = self.genai_model.generate_content(prompt)
             
@@ -243,8 +248,19 @@ IMPORTANT: Write directly in the commentator's voice. Do NOT include tone descri
             
             logger.info(f"Generating ElevenLabs audio for video {video_id}, text length: {len(clean_text)}")
             
-            # Use Eric voice (smooth tenor, man in his 40s)
-            voice_id = 'cjVigY5qzO86Huf0OWal'
+            # Multiple voice options for variety - randomly select one
+            voices = {
+                'Eric': 'cjVigY5qzO86Huf0OWal',              # Original smooth tenor
+                'Brian': 'nPczCjzI2devNBz1zQrb',             # Deep, confident
+                'Matthew': 'Yko7PKHZNXotIFUBG7I9',           # Professional, clear
+                'Bill': 'pqHfZKP75CvOlQylNhV4',             # Experienced, friendly
+                'Grandpa Spuds Oxley': 'NOpBlnGInO9m6vDvFkFC' # Wise grandfather voice
+            }
+            
+            # Randomly select a voice for variety
+            voice_name = random.choice(list(voices.keys()))
+            voice_id = voices[voice_name]
+            logger.info(f"Selected voice: {voice_name} ({voice_id})")
             
             # ElevenLabs TTS API call
             url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
