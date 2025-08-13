@@ -42,15 +42,15 @@ def get_current_vod():
                     print("❌ No Video of the Day found for today")
                     return None
                 
-                # Map query results to dict
+                # Map query results to dict (ai_analysis is at index 11 based on shared query)
                 return {
                     'video_id': result[0],
                     'title': result[1],
                     'channel_name': result[2],
                     'view_count': result[3],
-                    'published_at': result[4],
-                    'duration_seconds': result[5],
-                    'ai_summary': result[6] if len(result) > 6 else None
+                    'published_at': result[6],  # published_at is at index 6
+                    'duration_seconds': result[9],  # duration_seconds is at index 9
+                    'ai_summary': result[11] if len(result) > 11 and result[11] else None  # ai_analysis
                 }
                 
     except Exception as e:
@@ -79,6 +79,52 @@ def get_creator_x_handle(channel_name):
                 
     except Exception as e:
         print(f"⚠️  Could not get X handle: {e}")
+        return None
+
+def generate_contextual_question(title, ai_summary):
+    """Generate a contextual question based on video content using AI"""
+    try:
+        import google.generativeai as genai
+        
+        # Configure Gemini API
+        api_key = os.getenv('GOOGLE_API_KEY')
+        if not api_key:
+            return None
+            
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        
+        prompt = f"""Based on this golf video title and summary, generate ONE engaging question (under 50 characters) that would get golf fans to comment and engage on Twitter/X.
+
+Title: {title}
+Summary: {ai_summary}
+
+The question should:
+- Be specific to the video content
+- Encourage personal responses/experiences 
+- Create discussion/debate
+- Be conversational and casual
+- End with a question mark
+
+Examples of good questions:
+- "What's your handicap vs these guys?"
+- "Could you handle Bryson's power?"
+- "Best course management tip here?"
+- "Your go-to recovery shot?"
+
+Generate just the question, nothing else:"""
+
+        response = model.generate_content(prompt)
+        question = response.text.strip()
+        
+        # Validate the response
+        if question and len(question) < 60 and question.endswith('?'):
+            return question
+        else:
+            return None
+            
+    except Exception as e:
+        print(f"⚠️ Could not generate contextual question: {e}")
         return None
 
 def format_duration(seconds):
@@ -121,20 +167,23 @@ def generate_vod_post(vod_data):
         "Golf content that actually delivers 💯"
     ]
     
-    # Engaging questions (random selection)
-    questions = [
+    # Generate contextual question using AI if we have summary
+    contextual_question = None
+    if vod_data.get('ai_summary'):
+        contextual_question = generate_contextual_question(vod_data['title'], vod_data['ai_summary'])
+    
+    # Fallback engaging questions if AI generation fails
+    fallback_questions = [
         "What's your biggest takeaway from this?",
-        "Anyone else struggle with this?",
         "Thoughts on this approach?", 
         "Who else needs to see this?",
-        "Is this your experience too?",
         "What would you do differently?",
         "Does this change how you think about golf?"
     ]
     
     # Random selections
     hook = random.choice(hooks)
-    question = random.choice(questions)
+    question = contextual_question if contextual_question else random.choice(fallback_questions)
     
     # Get AI summary snippet for context
     context = ""
@@ -145,10 +194,10 @@ def generate_vod_post(vod_data):
         for sentence in sentences:
             if any(word in sentence.lower() for word in ['hole', 'shot', 'yards', 'putt', 'fairway', 'green']):
                 if len(sentence.strip()) > 20:
-                    context = sentence.strip()[:120] + "..."
+                    context = sentence.strip()[:80] + "..." if len(sentence.strip()) > 80 else sentence.strip()
                     break
         if not context and len(summary) > 50:
-            context = summary[:117] + "..."
+            context = summary[:80] + "..."
     
     # Build the post with personality
     if context:
