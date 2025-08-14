@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { api } from "@/lib/api";
 import VideoOfTheDayCarouselMouse from "./VideoOfTheDayCarouselMouse";
+import PowerRankingsTicker from "./PowerRankingsTicker";
 
 interface VideoRanking {
   rank: number;
@@ -137,7 +138,16 @@ function VideoCard({
           {video.title}
         </h3>
 
-        <p className="mb-1 text-sm text-gray-400 truncate">{video.channel}</p>
+        <div className="flex items-center justify-between mb-1">
+          <p className="text-sm text-gray-400 truncate">{video.channel}</p>
+          {/* YouTube Attribution Badge */}
+          <div className="flex items-center space-x-1 text-xs text-gray-500">
+            <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M23.498 6.186a2.998 2.998 0 0 0-2.112-2.112C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.386.529A2.998 2.998 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a2.998 2.998 0 0 0 2.112 2.112c1.881.529 9.386.529 9.386.529s7.505 0 9.386-.529a2.998 2.998 0 0 0 2.112-2.112C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+            </svg>
+            <span>YouTube</span>
+          </div>
+        </div>
 
         <div className="flex items-center space-x-2 text-xs text-gray-500">
           <span className="truncate">{formatViews(video.views)} views</span>
@@ -273,6 +283,7 @@ interface HomePageProps {
   initialStats: DirectoryStats;
   initialVideosWithAudio: any[];
   initialVideoOfTheDay: any;
+  initialPowerRankings: any[];
 }
 
 export default function HomePage({
@@ -283,6 +294,7 @@ export default function HomePage({
   initialStats,
   initialVideosWithAudio,
   initialVideoOfTheDay,
+  initialPowerRankings,
 }: HomePageProps) {
   const [curatedVideos, setCuratedVideos] = useState<VideoRanking[]>(
     initialCuratedVideos.slice(0, 3)
@@ -424,40 +436,9 @@ export default function HomePage({
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900">
-      {/* Stats Bar - Mobile Optimized */}
-      {initialStats && (
-        <div className="border-b backdrop-blur-sm border-white/10 bg-black/30">
-          <div className="px-4 py-3 mx-auto max-w-7xl md:px-6 md:py-4">
-            <div className="flex justify-between items-center text-sm text-white md:text-base">
-              <div className="flex flex-1 items-center space-x-4 md:space-x-8">
-                <div className="flex items-center space-x-1 md:space-x-2">
-                  <Play className="w-3 h-3 text-blue-400 md:w-4 md:h-4" />
-                  <span className="text-xs font-bold md:text-base">
-                    {initialStats.total_videos.toLocaleString()}
-                  </span>
-                  <span className="hidden text-xs text-gray-400 md:text-base sm:inline">
-                    videos
-                  </span>
-                </div>
-                <div className="flex items-center space-x-1 md:space-x-2">
-                  <Clock className="w-3 h-3 text-green-400 md:w-4 md:h-4" />
-                  <span className="text-xs font-bold md:text-base">
-                    {initialStats.total_channels.toLocaleString()}
-                  </span>
-                  <span className="hidden text-xs text-gray-400 md:text-base sm:inline">
-                    channels
-                  </span>
-                </div>
-                <div className="hidden items-center space-x-2 md:flex">
-                  <span className="text-gray-400">Updated</span>
-                  <span className="font-bold">
-                    {new Date(initialStats.last_updated).toLocaleTimeString()}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+      {/* Power Rankings Ticker - Replaces Stats Bar */}
+      {initialPowerRankings && initialPowerRankings.length > 0 && (
+        <PowerRankingsTicker rankings={initialPowerRankings} />
       )}
 
       {/* Main Content */}
@@ -564,6 +545,40 @@ export default function HomePage({
           overflow: hidden;
         }
       `}</style>
+      
+      {/* YouTube Attribution Footer */}
+      <footer className="mt-12 py-8 border-t border-gray-800">
+        <div className="container mx-auto px-4 text-center">
+          <div className="flex items-center justify-center space-x-2 text-sm text-gray-500 mb-2">
+            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M23.498 6.186a2.998 2.998 0 0 0-2.112-2.112C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.386.529A2.998 2.998 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a2.998 2.998 0 0 0 2.112 2.112c1.881.529 9.386.529 9.386.529s7.505 0 9.386-.529a2.998 2.998 0 0 0 2.112-2.112C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+            </svg>
+            <span>Videos sourced from YouTube</span>
+          </div>
+          <p className="text-xs text-gray-600">
+            StreamingRange curates and displays publicly available YouTube content. 
+            All videos link directly to YouTube.com and remain the property of their respective creators.
+          </p>
+          <p className="text-xs text-gray-600 mt-2">
+            © 2025 StreamingRange • Powered by YouTube Data API
+          </p>
+          {/* X (Twitter) Link - Own Row */}
+          <div className="flex items-center justify-center mt-4">
+            <a 
+              href="https://x.com/streamingrange" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="flex items-center space-x-2 text-gray-500 hover:text-white transition-colors"
+              aria-label="Follow us on X"
+            >
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+              </svg>
+              <span className="text-xs">@streamingrange</span>
+            </a>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

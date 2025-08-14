@@ -10,6 +10,9 @@ build/
 
 # Environment files
 .env
+
+frontend/golf-directory/public/audio
+
 .env.local
 .env.production
 

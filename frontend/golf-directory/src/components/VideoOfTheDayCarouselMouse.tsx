@@ -228,9 +228,18 @@ export default function VideoOfTheDayCarouselMouse({
                         <h3 className="mb-2 text-lg font-bold leading-tight text-white line-clamp-2">
                           {video.title}
                         </h3>
-                        <p className="text-sm font-medium text-purple-200">
-                          {video.channel}
-                        </p>
+                        <div className="flex items-center justify-between">
+                          <p className="text-sm font-medium text-purple-200">
+                            {video.channel}
+                          </p>
+                          {/* YouTube Attribution Badge */}
+                          <div className="flex items-center space-x-1 text-xs text-gray-400">
+                            <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor">
+                              <path d="M23.498 6.186a2.998 2.998 0 0 0-2.112-2.112C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.386.529A2.998 2.998 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a2.998 2.998 0 0 0 2.112 2.112c1.881.529 9.386.529 9.386.529s7.505 0 9.386-.529a2.998 2.998 0 0 0 2.112-2.112C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                            </svg>
+                            <span>YouTube</span>
+                          </div>
+                        </div>
 
                         {/* View count */}
                         <div className="flex items-center mt-2 space-x-2">
