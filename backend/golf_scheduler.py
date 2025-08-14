@@ -572,8 +572,27 @@ class GolfScheduler:
             self.generate_ai_for_video_of_day()
             logger.info("AI Video of the Day generation completed")
             
+            # Restart frontend to refresh VOD data
+            self.restart_frontend()
+            
         except Exception as e:
             logger.error(f"Error in AI Video of the Day generation: {e}")
+    
+    def restart_frontend(self):
+        """Restart the frontend service to refresh VOD data"""
+        try:
+            import subprocess
+            logger.info("Restarting golf-app frontend service...")
+            result = subprocess.run(['systemctl', 'restart', 'golf-app'], 
+                                 capture_output=True, text=True, timeout=30)
+            if result.returncode == 0:
+                logger.info("Frontend service restarted successfully")
+            else:
+                logger.warning(f"Frontend restart returned code {result.returncode}: {result.stderr}")
+        except subprocess.TimeoutExpired:
+            logger.error("Frontend restart timed out after 30 seconds")
+        except Exception as e:
+            logger.error(f"Error restarting frontend service: {e}")
     
     def start_scheduler(self):
         """Start the scheduler with the 5 tasks"""
