@@ -5,9 +5,11 @@ export function formatViews(views: string | number): string {
   const num = typeof views === 'string' ? parseInt(views.replace(/,/g, '')) : views
   
   if (num >= 1000000) {
-    return `${Math.floor(num / 1000000)}M`
+    const millions = num / 1000000
+    return millions >= 10 ? `${Math.floor(millions)}M` : `${(millions).toFixed(1)}M`
   } else if (num >= 1000) {
-    return `${Math.floor(num / 1000)}K`
+    const thousands = num / 1000
+    return thousands >= 10 ? `${Math.floor(thousands)}K` : `${(thousands).toFixed(1)}K`
   }
   
   return num.toLocaleString()
