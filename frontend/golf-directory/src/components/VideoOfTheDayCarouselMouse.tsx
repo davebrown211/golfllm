@@ -64,6 +64,7 @@ export default function VideoOfTheDayCarouselMouse({
   const [videos] = useState<VideoWithAudio[]>(initialVideos);
   const [, setCurrentIndex] = useState(0);
   const [error] = useState<string | null>(null);
+  const [mobileCurrentIndex, setMobileCurrentIndex] = useState(0); // For mobile pagination
   const [focusedIndex, setFocusedIndex] = useState(() => {
     // Find the video of the day index (should be 0 after sorting)
     const vodIndex = initialVideos.findIndex(
@@ -91,6 +92,15 @@ export default function VideoOfTheDayCarouselMouse({
     if (daysAgo <= 7) return `${daysAgo} days ago`;
     const weeks = Math.floor(daysAgo / 7);
     return `${weeks} week${weeks > 1 ? "s" : ""} ago`;
+  };
+
+  // Mobile navigation functions
+  const goToNext = () => {
+    setMobileCurrentIndex((prev) => (prev + 1) % videos.length);
+  };
+
+  const goToPrevious = () => {
+    setMobileCurrentIndex((prev) => (prev - 1 + videos.length) % videos.length);
   };
 
   // Handle clicking on video cards to focus them
@@ -310,9 +320,9 @@ export default function VideoOfTheDayCarouselMouse({
       <div className="md:hidden">
         {videos.length > 0 && (
           <div className="overflow-hidden rounded-2xl border border-gray-700 shadow-lg backdrop-blur-sm bg-gray-900/80">
-            {/* Use the first video (video of the day) for mobile */}
+            {/* Use current mobile index */}
             {(() => {
-              const video = videos[0];
+              const video = videos[mobileCurrentIndex];
               return (
                 <>
                   {/* Video Thumbnail */}
@@ -394,6 +404,48 @@ export default function VideoOfTheDayCarouselMouse({
                       </div>
                     )}
                   </div>
+                  
+                  {/* Mobile Navigation Controls */}
+                  {videos.length > 1 && (
+                    <div className="flex justify-between items-center px-4 py-3 border-t border-gray-700">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          goToPrevious();
+                        }}
+                        className="flex justify-center items-center w-10 h-10 rounded-full transition-colors bg-white/10 hover:bg-white/20"
+                        aria-label="Previous video"
+                      >
+                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                        </svg>
+                      </button>
+                      
+                      <div className="flex items-center space-x-2">
+                        <span className="text-sm text-gray-400">
+                          {mobileCurrentIndex + 1} of {videos.length}
+                        </span>
+                        {videos[mobileCurrentIndex].is_video_of_day && (
+                          <span className="px-2 py-1 text-xs font-medium text-purple-300 bg-purple-900/50 rounded-full">
+                            Featured
+                          </span>
+                        )}
+                      </div>
+                      
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          goToNext();
+                        }}
+                        className="flex justify-center items-center w-10 h-10 rounded-full transition-colors bg-white/10 hover:bg-white/20"
+                        aria-label="Next video"
+                      >
+                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </button>
+                    </div>
+                  )}
                 </>
               );
             })()}

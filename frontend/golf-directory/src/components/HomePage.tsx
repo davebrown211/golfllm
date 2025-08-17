@@ -330,10 +330,13 @@ export default function HomePage({
       if (section === "curated") {
         let targetOffset = curatedOffset;
 
+        // Use step size 1 on mobile, 3 on desktop
+        const stepSize = typeof window !== 'undefined' && window.innerWidth < 1024 ? 1 : 3;
+        
         if (direction === "next") {
-          targetOffset = curatedOffset + 3;
-        } else if (direction === "previous" && curatedOffset >= 3) {
-          targetOffset = curatedOffset - 3;
+          targetOffset = curatedOffset + stepSize;
+        } else if (direction === "previous" && curatedOffset >= stepSize) {
+          targetOffset = curatedOffset - stepSize;
         } else if (direction === "reset") {
           targetOffset = 0;
           setRefreshAnimating(section);
@@ -343,23 +346,25 @@ export default function HomePage({
         // For now, just cycle through the initial data
         // In a full implementation, you'd need API endpoints or more sophisticated SSR
         const allVideos = initialCuratedVideos;
-        const newVideos = allVideos.slice(targetOffset, targetOffset + 3);
+        const newVideos = allVideos.slice(targetOffset, targetOffset + stepSize);
 
         if (newVideos.length > 0) {
           setCuratedVideos(newVideos);
           setCuratedOffset(targetOffset);
         } else if (direction === "next" && targetOffset > 0) {
           // Loop back to beginning
-          setCuratedVideos(allVideos.slice(0, 3));
+          setCuratedVideos(allVideos.slice(0, stepSize));
           setCuratedOffset(0);
         }
       } else if (section === "instructional") {
         let targetOffset = instructionalOffset;
 
+        const stepSize = typeof window !== 'undefined' && window.innerWidth < 1024 ? 1 : 3;
+        
         if (direction === "next") {
-          targetOffset = instructionalOffset + 3;
-        } else if (direction === "previous" && instructionalOffset >= 3) {
-          targetOffset = instructionalOffset - 3;
+          targetOffset = instructionalOffset + stepSize;
+        } else if (direction === "previous" && instructionalOffset >= stepSize) {
+          targetOffset = instructionalOffset - stepSize;
         } else if (direction === "reset") {
           targetOffset = 0;
           setRefreshAnimating(section);
@@ -367,23 +372,25 @@ export default function HomePage({
         }
 
         const allVideos = initialInstructionalVideos;
-        const newVideos = allVideos.slice(targetOffset, targetOffset + 3);
+        const newVideos = allVideos.slice(targetOffset, targetOffset + stepSize);
 
         if (newVideos.length > 0) {
           setInstructionalVideos(newVideos);
           setInstructionalOffset(targetOffset);
         } else if (direction === "next" && targetOffset > 0) {
           // Loop back to beginning
-          setInstructionalVideos(allVideos.slice(0, 3));
+          setInstructionalVideos(allVideos.slice(0, stepSize));
           setInstructionalOffset(0);
         }
       } else if (section === "professional") {
         let targetOffset = professionalOffset;
 
+        const stepSize = typeof window !== 'undefined' && window.innerWidth < 1024 ? 1 : 3;
+        
         if (direction === "next") {
-          targetOffset = professionalOffset + 3;
-        } else if (direction === "previous" && professionalOffset >= 3) {
-          targetOffset = professionalOffset - 3;
+          targetOffset = professionalOffset + stepSize;
+        } else if (direction === "previous" && professionalOffset >= stepSize) {
+          targetOffset = professionalOffset - stepSize;
         } else if (direction === "reset") {
           targetOffset = 0;
           setRefreshAnimating(section);
@@ -391,23 +398,25 @@ export default function HomePage({
         }
 
         const allVideos = initialProfessionalVideos;
-        const newVideos = allVideos.slice(targetOffset, targetOffset + 3);
+        const newVideos = allVideos.slice(targetOffset, targetOffset + stepSize);
 
         if (newVideos.length > 0) {
           setProfessionalVideos(newVideos);
           setProfessionalOffset(targetOffset);
         } else if (direction === "next" && targetOffset > 0) {
           // Loop back to beginning
-          setProfessionalVideos(allVideos.slice(0, 3));
+          setProfessionalVideos(allVideos.slice(0, stepSize));
           setProfessionalOffset(0);
         }
       } else if (section === "discovery") {
         let targetOffset = discoveryOffset;
 
+        const stepSize = typeof window !== 'undefined' && window.innerWidth < 1024 ? 1 : 3;
+        
         if (direction === "next") {
-          targetOffset = discoveryOffset + 3;
-        } else if (direction === "previous" && discoveryOffset >= 3) {
-          targetOffset = discoveryOffset - 3;
+          targetOffset = discoveryOffset + stepSize;
+        } else if (direction === "previous" && discoveryOffset >= stepSize) {
+          targetOffset = discoveryOffset - stepSize;
         } else if (direction === "reset") {
           targetOffset = 0;
           setRefreshAnimating(section);
@@ -415,14 +424,14 @@ export default function HomePage({
         }
 
         const allVideos = initialDiscoveryVideos;
-        const newVideos = allVideos.slice(targetOffset, targetOffset + 3);
+        const newVideos = allVideos.slice(targetOffset, targetOffset + stepSize);
 
         if (newVideos.length > 0) {
           setDiscoveryVideos(newVideos);
           setDiscoveryOffset(targetOffset);
         } else if (direction === "next" && targetOffset > 0) {
           // Loop back to beginning
-          setDiscoveryVideos(allVideos.slice(0, 3));
+          setDiscoveryVideos(allVideos.slice(0, stepSize));
           setDiscoveryOffset(0);
         }
       }
@@ -458,7 +467,7 @@ export default function HomePage({
           onReset={() => navigateSection("curated", "reset")}
           canGoPrevious={curatedOffset > 0}
           isLoading={refreshingSection === "curated"}
-          currentPage={Math.floor(curatedOffset / 3)}
+          currentPage={Math.floor(curatedOffset / (typeof window !== 'undefined' && window.innerWidth < 1024 ? 1 : 3))}
           sectionKey="curated"
           refreshAnimating={refreshAnimating}
           hasNavigated={hasNavigated}
@@ -473,7 +482,7 @@ export default function HomePage({
           onReset={() => navigateSection("instructional", "reset")}
           canGoPrevious={instructionalOffset > 0}
           isLoading={refreshingSection === "instructional"}
-          currentPage={Math.floor(instructionalOffset / 3)}
+          currentPage={Math.floor(instructionalOffset / (typeof window !== 'undefined' && window.innerWidth < 1024 ? 1 : 3))}
           sectionKey="instructional"
           refreshAnimating={refreshAnimating}
           hasNavigated={hasNavigated}
@@ -488,7 +497,7 @@ export default function HomePage({
           onReset={() => navigateSection("professional", "reset")}
           canGoPrevious={professionalOffset > 0}
           isLoading={refreshingSection === "professional"}
-          currentPage={Math.floor(professionalOffset / 3)}
+          currentPage={Math.floor(professionalOffset / (typeof window !== 'undefined' && window.innerWidth < 1024 ? 1 : 3))}
           sectionKey="professional"
           refreshAnimating={refreshAnimating}
           hasNavigated={hasNavigated}
@@ -504,7 +513,7 @@ export default function HomePage({
             onReset={() => navigateSection("discovery", "reset")}
             canGoPrevious={discoveryOffset > 0}
             isLoading={refreshingSection === "discovery"}
-            currentPage={Math.floor(discoveryOffset / 3)}
+            currentPage={Math.floor(discoveryOffset / (typeof window !== 'undefined' && window.innerWidth < 1024 ? 1 : 3))}
             sectionKey="discovery"
             refreshAnimating={refreshAnimating}
             hasNavigated={hasNavigated}
