@@ -393,6 +393,7 @@ export default function VideoOfTheDayCarouselMouse({
                             AI Preview
                           </p>
                           <audio
+                            key={video.video_id} // Force re-render when video changes
                             controls
                             className="h-6 scale-90"
                             preload="metadata"
