@@ -29,13 +29,13 @@ load_dotenv()
 class AISummaryRunner:
     def __init__(self):
         self.database_url = os.getenv('DATABASE_URL')
-        google_api_key = os.getenv('GOOGLE_API_KEY')
+        anthropic_api_key = os.getenv('ANTHROPIC_API_KEY')
         elevenlabs_api_key = os.getenv('ELEVENLABS_API_KEY')
         
         if not self.database_url:
             raise ValueError("DATABASE_URL environment variable is required")
         
-        self.ai_processor = AIProcessor(google_api_key, elevenlabs_api_key)
+        self.ai_processor = AIProcessor(anthropic_api_key, elevenlabs_api_key)
         
         logger.info("AI Summary Runner initialized with database-driven whitelist")
         

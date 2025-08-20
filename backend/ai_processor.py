@@ -11,7 +11,6 @@ import re
 import random
 from typing import Optional, Dict, Any
 from pathlib import Path
-import google.generativeai as genai
 try:
     from elevenlabs import ElevenLabs
     client = ElevenLabs()
@@ -21,6 +20,7 @@ except ImportError:
 import requests
 import boto3
 from botocore.exceptions import ClientError
+import anthropic
 
 logger = logging.getLogger(__name__)
 
@@ -28,16 +28,15 @@ class AIProcessor:
     """AI processing for video analysis and audio generation"""
     
     def __init__(self, 
-                 google_api_key: Optional[str] = None,
+                 anthropic_api_key: Optional[str] = None,
                  elevenlabs_api_key: Optional[str] = None):
         
-        # Configure Google Gemini
-        if google_api_key:
-            genai.configure(api_key=google_api_key)
-            self.genai_model = genai.GenerativeModel('gemini-1.5-pro')
+        # Configure Anthropic Claude
+        if anthropic_api_key:
+            self.anthropic_client = anthropic.Anthropic(api_key=anthropic_api_key)
         else:
-            self.genai_model = None
-            logger.warning("Google API key not provided - AI analysis disabled")
+            self.anthropic_client = None
+            logger.warning("Anthropic API key not provided - AI analysis disabled")
         
         # Configure ElevenLabs
         self.elevenlabs_api_key = elevenlabs_api_key
@@ -181,8 +180,8 @@ class AIProcessor:
         """
         Generate golf announcer-style trailer summary (matches Next.js Gemini prompt exactly)
         """
-        if not self.genai_model:
-            logger.error("Gemini API not configured")
+        if not self.anthropic_client:
+            logger.error("Anthropic API not configured")
             return None
         
         try:
@@ -214,18 +213,24 @@ Think: Jim Nantz introducing a moment, but with the insight of a former tour pla
 
 IMPORTANT: Write directly in the commentator's voice. Do NOT include tone descriptions, voice directions, or parenthetical instructions - just write the actual words that should be spoken. Aim for 45 seconds of natural, conversational speech with concrete details from the video."""
 
-            response = self.genai_model.generate_content(prompt)
+            response = self.anthropic_client.messages.create(
+                model="claude-3-haiku-20240307",
+                max_tokens=1000,
+                messages=[
+                    {"role": "user", "content": prompt}
+                ]
+            )
             
-            if response and response.text:
-                summary = response.text.strip()
-                logger.info(f"Generated Gemini summary: {len(summary)} characters")
+            if response and response.content and len(response.content) > 0:
+                summary = response.content[0].text.strip()
+                logger.info(f"Generated Claude summary: {len(summary)} characters")
                 return summary
             else:
-                logger.error("Empty response from Gemini")
+                logger.error("Empty response from Claude")
                 return None
                 
         except Exception as e:
-            logger.error(f"Error generating Gemini summary: {e}")
+            logger.error(f"Error generating Claude summary: {e}")
             return None
     
     def generate_audio(self, text: str, video_id: str) -> Optional[str]:
