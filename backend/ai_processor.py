@@ -109,8 +109,8 @@ class AIProcessor:
                     transcript_text = ' '.join([segment.text for segment in fetched])
                     
                     if transcript_text and len(transcript_text) > 100:
-                        logger.info(f"Successfully fetched transcript: {len(transcript_text)} characters")
-                        return transcript_text[:6000]  # Limit for AI processing
+                        logger.info(f"Successfully fetched FULL transcript: {len(transcript_text)} characters")
+                        return transcript_text  # Return full transcript for chunk processing
                     break
                 
         except Exception as e:
@@ -229,10 +229,49 @@ class AIProcessor:
             return None
         
         try:
-            # Exact prompt from Next.js
+            # If transcript is very long, use chunk-and-combine approach
+            if len(transcript) > 15000:
+                logger.info(f"Transcript is {len(transcript)} chars - using chunk summarization approach")
+                
+                # Step 1: Split transcript into chunks
+                chunk_size = 10000  # ~2000 words per chunk
+                chunks = []
+                for i in range(0, len(transcript), chunk_size):
+                    chunks.append(transcript[i:i + chunk_size])
+                
+                logger.info(f"Split into {len(chunks)} chunks for summarization")
+                
+                # Step 2: Summarize each chunk
+                chunk_summaries = []
+                for i, chunk in enumerate(chunks):
+                    chunk_prompt = f"""Summarize this part {i+1} of {len(chunks)} of a golf video transcript. 
+                    Focus on: key moments, scores, player actions, dramatic turns, and outcomes.
+                    Keep it concise (100-150 words).
+                    
+                    Transcript chunk: {chunk}"""
+                    
+                    response = self.anthropic_client.messages.create(
+                        model="claude-3-haiku-20240307",
+                        max_tokens=300,
+                        messages=[{"role": "user", "content": chunk_prompt}]
+                    )
+                    
+                    if response and response.content:
+                        chunk_summary = response.content[0].text.strip()
+                        chunk_summaries.append(f"Part {i+1}: {chunk_summary}")
+                        logger.info(f"Summarized chunk {i+1}/{len(chunks)}")
+                
+                # Step 3: Generate final summary from all chunk summaries
+                combined_summaries = "\n\n".join(chunk_summaries)
+                logger.info(f"Combined summaries total: {len(combined_summaries)} chars")
+                
+                # Use the combined summaries as the transcript for the final prompt
+                transcript = f"Video Overview (summarized from full transcript):\n{combined_summaries}"
+            
+            # Final announcer-style summary prompt
             prompt = f"""You are "The Professor" - a golf commentator who blends Jim Nantz's elegance, Colt Knost's tour insight, and Kevin Kisner's everyman appeal. Create a compelling TRAILER-STYLE preview for this golf video: "{video_title}"
 
-Based on this transcript: {transcript[:6000]}
+Based on this transcript: {transcript[:10000]}
 
 Your Mission:
 - Create a 45-second audio preview (110-130 words of natural speech)
