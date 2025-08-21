@@ -294,7 +294,16 @@ Structure Guidelines:
 
 Think: Jim Nantz introducing a moment, but with the insight of a former tour player and the humor of your weekend foursome's best storyteller.
 
-IMPORTANT: Write directly in the commentator's voice. Do NOT include tone descriptions, voice directions, or parenthetical instructions - just write the actual words that should be spoken. Aim for 45 seconds of natural, conversational speech with concrete details from the video."""
+CRITICAL FORMATTING RULES:
+- Write ONLY the spoken words, nothing else
+- Do NOT start with "*clears throat*" or any stage directions
+- Do NOT include tone descriptions like "*speaks in a smooth voice*"
+- Do NOT use asterisks (*) anywhere in your response
+- Do NOT include "[voice direction]" or "(tone instruction)" 
+- Start immediately with the actual commentary words
+- This text will be sent directly to text-to-speech, so only include speakable words
+
+Write directly in the commentator's voice. Aim for 45 seconds of natural, conversational speech with concrete details from the video."""
 
             response = self.anthropic_client.messages.create(
                 model="claude-3-haiku-20240307",
