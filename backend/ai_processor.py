@@ -78,14 +78,22 @@ class AIProcessor:
             from youtube_transcript_api import YouTubeTranscriptApi
             
             logger.info(f"Attempting to fetch transcript for video {video_id}")
-            transcript_list = YouTubeTranscriptApi.get_transcript(video_id)
+            # Use the correct API method
+            api = YouTubeTranscriptApi()
+            transcript_list = api.list(video_id)
             
-            # Combine all transcript segments into one text
-            transcript_text = ' '.join([segment['text'] for segment in transcript_list])
-            
-            if transcript_text and len(transcript_text) > 100:
-                logger.info(f"Successfully fetched transcript: {len(transcript_text)} characters")
-                return transcript_text[:6000]  # Limit for AI processing
+            # Find and fetch English transcript
+            for transcript in transcript_list:
+                if transcript.language_code == 'en':
+                    fetched = transcript.fetch()
+                    
+                    # Combine all transcript segments into one text
+                    transcript_text = ' '.join([segment.text for segment in fetched])
+                    
+                    if transcript_text and len(transcript_text) > 100:
+                        logger.info(f"Successfully fetched transcript: {len(transcript_text)} characters")
+                        return transcript_text[:6000]  # Limit for AI processing
+                    break
                 
         except Exception as e:
             logger.warning(f"Could not fetch transcript via youtube-transcript-api: {e}")
