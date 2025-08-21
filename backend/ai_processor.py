@@ -326,14 +326,29 @@ IMPORTANT: Write directly in the commentator's voice. Do NOT include tone descri
         
         try:
             # Clean the text for audio generation (matches Next.js logic)
-            clean_text = text.replace('[AI-generated from video transcript]', '').replace('**', '').replace('*', '').strip()
+            clean_text = text.replace('[AI-generated from video transcript]', '').strip()
             
-            # Remove tone/emotion instructions in brackets or parentheses 
-            clean_text = re.sub(r'\[.*?\]', '', clean_text).strip()  # Remove bracketed instructions
-            clean_text = re.sub(r'\(.*?\)', '', clean_text).strip()  # Remove parenthetical instructions
+            # Remove stage directions and tone instructions
+            # Remove content between asterisks (like *clears throat*)
+            clean_text = re.sub(r'\*[^*]+\*', '', clean_text).strip()
+            
+            # Remove bracketed instructions [like this]
+            clean_text = re.sub(r'\[.*?\]', '', clean_text).strip()
+            
+            # Remove parenthetical stage directions at the start
+            if clean_text.startswith('(') and ')' in clean_text[:100]:
+                clean_text = re.sub(r'^\([^)]+\)\s*', '', clean_text).strip()
+            
+            # Remove any remaining asterisks
+            clean_text = clean_text.replace('*', '').strip()
             
             # Remove any leading/trailing punctuation after instruction removal
             clean_text = re.sub(r'^[,.\s]+|[,.\s]+$', '', clean_text).strip()
+            
+            # If the text still starts with lowercase, it might be a continuation from removed stage direction
+            # Capitalize the first letter
+            if clean_text and clean_text[0].islower():
+                clean_text = clean_text[0].upper() + clean_text[1:]
             
             logger.info(f"Generating ElevenLabs audio for video {video_id}, text length: {len(clean_text)}")
             
