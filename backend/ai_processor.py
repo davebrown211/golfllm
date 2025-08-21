@@ -248,10 +248,12 @@ class AIProcessor:
                     Focus on: key moments, scores, player actions, dramatic turns, and outcomes.
                     Keep it concise (100-150 words).
                     
+                    CRITICAL: Only include specific details (hole numbers, yardages, shot descriptions) if they are EXPLICITLY stated in the transcript. Do not infer or guess details that aren't clearly mentioned.
+                    
                     Transcript chunk: {chunk}"""
                     
                     response = self.anthropic_client.messages.create(
-                        model="claude-3-haiku-20240307",
+                        model="claude-3-5-sonnet-20241022",
                         max_tokens=300,
                         messages=[{"role": "user", "content": chunk_prompt}]
                     )
@@ -275,9 +277,10 @@ Based on this transcript: {transcript[:10000]}
 
 Your Mission:
 - Create a 45-second audio preview (110-130 words of natural speech)
-- Include 2-3 SPECIFIC examples from the video without spoiling outcomes
-- Mention actual shots, holes, scores, courses, or moments from the transcript
-- Reference real situations and techniques viewers will learn about
+- Include 2-3 examples from the video without spoiling outcomes
+- ONLY mention specific details (hole numbers, yardages, shot types) if you are 100% confident they are accurately stated in the transcript
+- Reference general excitement, competition format, and stakes rather than potentially inaccurate specifics
+- Focus on the overall drama and personalities rather than precise technical details
 
 Your Personality:
 - Sophisticated yet approachable (Jim's warmth + Kisner's relatability)
@@ -306,7 +309,7 @@ CRITICAL FORMATTING RULES:
 Write directly in the commentator's voice. Aim for 45 seconds of natural, conversational speech with concrete details from the video."""
 
             response = self.anthropic_client.messages.create(
-                model="claude-3-haiku-20240307",
+                model="claude-3-5-sonnet-20241022",
                 max_tokens=1000,
                 messages=[
                     {"role": "user", "content": prompt}
