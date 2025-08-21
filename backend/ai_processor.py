@@ -77,9 +77,27 @@ class AIProcessor:
         try:
             from youtube_transcript_api import YouTubeTranscriptApi
             
+            # Check if we need to use a proxy (for cloud servers)
+            api = None
+            proxy_url = os.environ.get('YOUTUBE_PROXY_URL')  # Format: http://user:pass@proxy:port
+            
+            if proxy_url:
+                try:
+                    from youtube_transcript_api.proxies import GenericProxyConfig
+                    logger.info(f"Using proxy for transcript fetching: {proxy_url.split('@')[-1] if '@' in proxy_url else proxy_url}")
+                    proxy_config = GenericProxyConfig(
+                        http_url=proxy_url,
+                        https_url=proxy_url
+                    )
+                    api = YouTubeTranscriptApi(proxy_config=proxy_config)
+                except Exception as proxy_error:
+                    logger.warning(f"Failed to configure proxy: {proxy_error}, falling back to direct connection")
+                    api = YouTubeTranscriptApi()
+            else:
+                # No proxy configured, use direct connection
+                api = YouTubeTranscriptApi()
+            
             logger.info(f"Attempting to fetch transcript for video {video_id}")
-            # Use the correct API method
-            api = YouTubeTranscriptApi()
             transcript_list = api.list(video_id)
             
             # Find and fetch English transcript
