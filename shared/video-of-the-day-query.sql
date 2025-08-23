@@ -23,7 +23,7 @@ FROM youtube_videos yv
 JOIN youtube_channels yc ON yv.channel_id = yc.id
 LEFT JOIN video_analyses va ON va.youtube_url LIKE '%' || yv.id || '%'
   AND va.status = 'COMPLETED'
-WHERE DATE(yv.published_at AT TIME ZONE 'UTC') = CURRENT_DATE  -- Published TODAY
+WHERE DATE(yv.published_at AT TIME ZONE 'UTC') = CURRENT_DATE - INTERVAL '1 day'  -- Published YESTERDAY (gives time for views to accumulate)
   AND yv.view_count > 10000  -- Minimum threshold for quality
   AND yv.thumbnail_url IS NOT NULL
   AND (yv.duration_seconds IS NULL OR yv.duration_seconds >= 120)  -- At least 2 minutes
